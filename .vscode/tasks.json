@@ -23,7 +23,7 @@
                 "clear": false,
                 "group": "build"
             },
-            "group": "build"
+            "group": "build",
         },
         // convert YAML files into the ESP
         {
@@ -61,7 +61,6 @@
         // lint ESP using Spriggit
         {
             "label": "Lint ESP",
-            "dependsOn": ["Run Mutagen scripts"],
             "type": "shell",
             "command": "for esp in $(echo ${config:ESP_NAMES} | tr ',' '\n'); do ${config:SPRIGGIT_PATH} sort-script-properties -i \"$esp.esp\" -o \"$esp.esp\" --GameRelease SkyrimSE ; done",
             "group":"none"

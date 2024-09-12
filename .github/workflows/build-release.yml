@@ -188,7 +188,7 @@ jobs:
             cd Papyrus
             git init
             git remote add origin https://github.com/IHateMyKite/PAPYRUS.git
-            git sparse-checkout set --no-cone 'SRC'
+            git sparse-checkout set --no-cone 'SRC' 'SRC_SKYUI'
             git fetch --depth=1 origin main
             git checkout main
             rm -rf .git
@@ -229,7 +229,7 @@ jobs:
         # If you add more Papyrus sources, change the --import to include their folders
         - name: Run Caprica
           shell: bash
-          run: .github/Caprica/Caprica.exe --game skyrim --import ".github/Papyrus/SRC" --output "Scripts" --flags="TESV_Papyrus_Flags.flg" "Source/Scripts" -R -q
+          run: .github/Caprica/Caprica.exe --game skyrim --import ".github/Papyrus/SRC;.github/Papyrus/SRC_SKYUI" --output "Scripts" --flags="TESV_Papyrus_Flags.flg" "Source/Scripts" -R -q
         # As an example:
         # run: .github/Caprica/Caprica.exe --game skyrim --import ".github/Papyrus/SRC;.github/AnotherPapyrusRepo/Path/To/Papyrus/Files" --output "Scripts" --flags="TESV_Papyrus_Flags.flg" "Source/Scripts" -R -q
         - name: Upload Output

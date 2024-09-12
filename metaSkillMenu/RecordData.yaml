@@ -1,0 +1,12 @@
+SpriggitSource:
+  PackageName: Spriggit.Yaml.Skyrim
+  Version: 0.28.0
+ModKey: metaSkillMenu.esp
+GameRelease: SkyrimSE
+ModHeader:
+  Flags:
+  - Small
+  Stats:
+    Version: 1.7
+  Author: DEFAULT
+  INTV: 1

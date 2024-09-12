@@ -5,3 +5,4 @@ SSEEdit*
 /Scripts
 *.ppj
 settings.json
+.secrets
