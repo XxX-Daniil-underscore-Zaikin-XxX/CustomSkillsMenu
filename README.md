@@ -1,7 +1,3 @@
-# Default Papyrus project
+# Custom Skills Menu
 
-A modernized template for Skyrim mods, built with out-of-the-box compatibility with Caprica, Pyro, VSCode, and Actions. This is modding dragged kicking and screaming into the century of the fruit bat.
-
-There are many moving parts, but the [wiki](https://github.com/XxX-Daniil-underscore-Zaikin-XxX/PapyrusDefaultProject/wiki) should explain all - including the installation.
-
-If you encounter any issues with this project or have some suggestions, feel free to make a [new issue](https://github.com/XxX-Daniil-underscore-Zaikin-XxX/PapyrusDefaultProject/issues/new).
+This is a slight rework of [Osmosis Wrench](https://www.nexusmods.com/skyrimspecialedition/users/2801784)'s [Custom Skills Menu](https://www.nexusmods.com/skyrimspecialedition/mods/62423?tab=description) to make it compatible with Custom Skills Framework 3.1.

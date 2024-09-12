@@ -3,3 +3,5 @@ SSEEdit*
 *.esp
 *.pex
 /Scripts
+*.ppj
+settings.json

@@ -29,8 +29,8 @@ on:
 
 env:
   # If you must compile more .esp files, add them in the following format
-  ESP_NAMES: ("HelloWorldMod" "HelloWorldModPatch")
-  PROJECT_NAME: MyCoolProject
+  ESP_NAMES: ("metaSkillMenu")
+  PROJECT_NAME: CustomSkillMenu
   # Do not edit
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
