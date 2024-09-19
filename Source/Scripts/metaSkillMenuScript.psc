@@ -52,64 +52,90 @@ function register_events()
 endfunction
 
 function load_data()
-    string[] a = JContainers.contentsOfDirectoryAtPath("data/SKSE/Plugins/", ".json")
-    int x = JArray.objectWithStrings(a)
-    ; one day I will learn to use meaningfull variable names
-    int y = JValue.evalLuaObj(x, "return msm.returnSkillTreeObject(jobject)"
-    jvalue.writetofile(y, "data/interface/MetaSkillsMenu/test.json")
-    jvalue.release(x)
+    ; turn files to array of strings
+    string[] CSFFiles = JContainers.contentsOfDirectoryAtPath("data/SKSE/Plugins/", ".json")
+    ; create jarray (pointer, I think) from previous array
+    int CSFFilesArray = JArray.objectWithStrings(CSFFiles)
+    ;; one day I will learn to use meaningfull variable names
+    ; that day can be today, gamer
 
+    ; turn text files into one big json file using lua
+    int y = JValue.evalLuaObj(CSFFilesArray, "return msm.returnSkillTreeObject(jobject)")
+    ; write this to a test file
+    jvalue.writetofile(y, "data/interface/MetaSkillsMenu/test.json")
+    ; delete x
+    jvalue.release(CSFFilesArray)
+
+    ; start at the beginning
     string filekey = jmap.nextkey(y)
 
+    ; read hidedata
     int hideData
     if jcontainers.fileExistsAtPath("data/interface/MetaSkillsMenu/MSMHidden.json")
         hideData = JValue.readFromFile("data/interface/MetaSkillsMenu/MSMHidden.json")
     Else
         hideData = Jmap.Object()
     endif
-    int p = Jmap.Object()
+    int allConfigsFormatted = Jmap.Object()
     while filekey
+        ; grab object associated with key
         int fileobj = jmap.getobj(y, filekey)
-        ; oh my god why did I write this terrible code, it's jibberish
-        writelog("Found and loaded: "+ jmap.getstr(fileobj, "ShowMenuFile"))
+        string pluginName = StringUtil.Split(jmap.getstr(fileobj, "showMenu"), "|")[0]
+        ;; oh my god why did I write this terrible code, it's jibberish
+        ; yeah it sure is, did you write it on your phone or something?
+        writelog("Loading skills for plugin: " + pluginName)
+        ; no clue what this is about, I think it's to do with old versions
         if ((!b_CustomSkillsPapryusAPIExists && JMap.getInt(fileobj, "CSFSKSE")))
-            writelog("CSFSKSE Mod installed, but papyrus api not found: "+jmap.getstr(fileobj, "ShowMenuFile"))
+            writelog("CSFSKSE Mod installed, but papyrus api not found: "+pluginName)
         else
-            if (game.IsPluginInstalled(jmap.getstr(fileobj, "ShowMenuFile")))
+            if (game.IsPluginInstalled(pluginName))
+                ; copy the object (we'll change it and return it)
                 int retobj = jvalue.deepcopy(fileobj)
 
+                ; grab skillID from filename
                 asSkillId = StringUtil.Split(filekey, ".")[1]
 
+                ; set the a readable skill name
                 string modNameThing = jmap.getstr(fileobj, "Name") + " " + asSkillId
+                ; add skill id to our retobj
                 jmap.setstr(retobj, "asSkillId", asSkillId)
+                ; get icon location, set flag if exists
                 string icon_loc = jmap.getstr(fileobj, "icon_loc")
                 if JContainers.fileExistsAtPath(icon_loc)
                     jmap.setint(retobj, "icon_exists", true as int)
                 endif
 
-                jmap.setobj(p, modNameThing, retobj)
+                ; adds retobj under the key modNameThing to p
+                jmap.setobj(allConfigsFormatted, modNameThing, retobj)
+                ; check hideData for whether modNameThing is hidden
                 int valuetype = JValue.solvedValueType(hideData, "."+modNameThing+".hidden")
-                if valuetype != 2
-                    JValue.SolveIntSetter(hideData, "."+modNameThing+".hidden", false as int, true)
-                endif ; MOD NAME THING HUH, WHAT A FUCKING AMAZING NAME
+                if valuetype != 2 ; if not int, i.e. if we don't find it
+                    ; we go into the file and set it as false
+                    JValue.SolveIntSetter(hideData, "." + modNameThing + ".hidden", false as int, true)
+                endif ; MOD NAME THING HUH, WHAT A FUCKING AMAZING NAME ; haha, I'm keeping it then lol
+                ; *now* we read it from the file
                 jmap.setInt(retObj, "hidden", JValue.SolveInt(hideData, "."+modNameThing+".hidden"))
             else
-                writelog("FAILED TO FIND MOD, MISSING ESP: "+jmap.getstr(fileobj, "ShowMenuFile"))
+                writelog("FAILED TO FIND MOD, MISSING ESP: " + pluginName)
             endif
         endif
+        ; go to next filekey
         filekey = jmap.nextkey(y, filekey)
     endwhile
+    ; delete y
     jvalue.release(y)
-    if jmap.count(p) > 0
+    ; check if we even found anything
+    if jmap.count(allConfigsFormatted) > 0
         b_SkillTreesInstalled = true
     Else
         b_SkillTreesInstalled = false
     endif
 
+    ; write our data to files
     jvalue.writetofile(hideData, "data/interface/MetaSkillsMenu/MSMHidden.json")
-    jvalue.writetofile(p, "data/interface/MetaSkillsMenu/MSMData.json")
+    jvalue.writetofile(allConfigsFormatted, "data/interface/MetaSkillsMenu/MSMData.json")
     jvalue.release(hideData)
-    jvalue.release(p)
+    jvalue.release(allConfigsFormatted)
 endfunction
 
 event OpenMenu(string eventName, string strArg, float numArg, Form sender)
