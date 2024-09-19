@@ -81,7 +81,11 @@ event onHighlightST()
     if stateNameFull.Length > 1
         string csfName = stateNameFull[1]
         int data = JValue.ReadFromFile(dataPath)
-        SetInfoText("ESP Name: "+JValue.SolveStr(data, "."+csfName+".ShowMenuFile") +"\n"+ "Icon path: "+JValue.SolveStr(data, "."+csfName+".icon_loc"))
+        SetInfoText("ESP Name: " \
+            + StringUtil.Split(JValue.SolveStr(data, "."+csfName+".showMenu"), "|")[0] \
+            + "\n" + "Icon path: " \
+            + JValue.SolveStr(data, "."+csfName+".icon_loc") \
+        )
         jvalue.release(data)
     endif
 endEvent

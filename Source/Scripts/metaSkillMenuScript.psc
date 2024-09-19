@@ -53,21 +53,11 @@ endfunction
 
 function load_data()
     ; turn files to array of strings
-    string[] CSFFiles = JContainers.contentsOfDirectoryAtPath("data/SKSE/Plugins/", ".json")
-    ; create jarray (pointer, I think) from previous array
-    int CSFFilesArray = JArray.objectWithStrings(CSFFiles)
-    ;; one day I will learn to use meaningfull variable names
-    ; that day can be today, gamer
-
-    ; turn text files into one big json file using lua
-    int y = JValue.evalLuaObj(CSFFilesArray, "return msm.returnSkillTreeObject(jobject)")
-    ; write this to a test file
-    jvalue.writetofile(y, "data/interface/MetaSkillsMenu/test.json")
-    ; delete x
-    jvalue.release(CSFFilesArray)
+    int CSFFiles = JValue.readFromDirectory("data/SKSE/Plugins/", ".json")
+    jvalue.writetofile(CSFFiles, "data/interface/MetaSkillsMenu/test.json")
 
     ; start at the beginning
-    string filekey = jmap.nextkey(y)
+    string filekey = jmap.nextkey(CSFFiles)
 
     ; read hidedata
     int hideData
@@ -77,9 +67,11 @@ function load_data()
         hideData = Jmap.Object()
     endif
     int allConfigsFormatted = Jmap.Object()
+    ; WARNING
+    ; We only load skill groups with a `showMenu`
     while filekey
         ; grab object associated with key
-        int fileobj = jmap.getobj(y, filekey)
+        int fileobj = jmap.getobj(CSFFiles, filekey)
         string pluginName = StringUtil.Split(jmap.getstr(fileobj, "showMenu"), "|")[0]
         ;; oh my god why did I write this terrible code, it's jibberish
         ; yeah it sure is, did you write it on your phone or something?
@@ -92,38 +84,40 @@ function load_data()
                 ; copy the object (we'll change it and return it)
                 int retobj = jvalue.deepcopy(fileobj)
 
-                ; grab skillID from filename
-                asSkillId = StringUtil.Split(filekey, ".")[1]
+                string pluginNameFormatted = StringUtil.Split(pluginName, ".")[0]
 
-                ; set the a readable skill name
-                string modNameThing = jmap.getstr(fileobj, "Name") + " " + asSkillId
-                ; add skill id to our retobj
-                jmap.setstr(retobj, "asSkillId", asSkillId)
+                ; Skill groups don't have a `Name` or `Description`, so we make do
+                ; The user will have to set this manually
+                JMap.setStr(retobj, "Name", pluginNameFormatted)
+                JMap.setStr(retobj, "Description", "Skills belonging to " + pluginNameFormatted)
+
                 ; get icon location, set flag if exists
                 string icon_loc = jmap.getstr(fileobj, "icon_loc")
                 if JContainers.fileExistsAtPath(icon_loc)
                     jmap.setint(retobj, "icon_exists", true as int)
                 endif
 
-                ; adds retobj under the key modNameThing to p
-                jmap.setobj(allConfigsFormatted, modNameThing, retobj)
+                ; adds retobj under the key asSkillId to config storage
+                jmap.setobj(allConfigsFormatted, asSkillId, retobj)
+
                 ; check hideData for whether modNameThing is hidden
-                int valuetype = JValue.solvedValueType(hideData, "."+modNameThing+".hidden")
+                string hiddenPath = "." + asSkillId + ".hidden"
+                int valuetype = JValue.solvedValueType(hideData, hiddenPath)
                 if valuetype != 2 ; if not int, i.e. if we don't find it
                     ; we go into the file and set it as false
-                    JValue.SolveIntSetter(hideData, "." + modNameThing + ".hidden", false as int, true)
+                    JValue.SolveIntSetter(hideData, hiddenPath, false as int, true)
                 endif ; MOD NAME THING HUH, WHAT A FUCKING AMAZING NAME ; haha, I'm keeping it then lol
                 ; *now* we read it from the file
-                jmap.setInt(retObj, "hidden", JValue.SolveInt(hideData, "."+modNameThing+".hidden"))
+                jmap.setInt(retObj, "hidden", JValue.SolveInt(hideData, hiddenPath))
             else
                 writelog("FAILED TO FIND MOD, MISSING ESP: " + pluginName)
             endif
         endif
         ; go to next filekey
-        filekey = jmap.nextkey(y, filekey)
+        filekey = jmap.nextkey(CSFFiles, filekey)
     endwhile
     ; delete y
-    jvalue.release(y)
+    jvalue.release(CSFFiles)
     ; check if we even found anything
     if jmap.count(allConfigsFormatted) > 0
         b_SkillTreesInstalled = true
@@ -161,15 +155,15 @@ endFunction
 
 event SelectedMenu(string eventName, string strArg, float numArg, Form sender)
     int MSMData = JValue.readFromFile("data/interface/MetaSkillsMenu/MSMData.json")
+    ; get chosen skill object from config
     int modObject = JMap.getObj(MSMData, strArg)
     int CSFSKSESkill = JMap.getInt(modObject, "CSFSKSE")
     if (b_CustomSkillsPapryusAPIExists && CSFSKSESkill)
-        asSkillId = JMap.getStr(modObject, "asSkillId")
-        CustomSkills.OpenCustomSkillMenu(asSkillId)
+        string skillId = JMap.getStr(modObject, "id")
+        CustomSkills.OpenCustomSkillMenu(skillId)
     else
-        string modname = JMap.getStr(modObject, "ShowMenuFile")
-        Form modForm = JMap.getForm(modObject, "ShowMenuForm")
-        (modForm as GlobalVariable).SetValue(1.0)
+        Form showMenuVar = JMap.getForm(modObject, "showMenu")
+        (showMenuVar as GlobalVariable).SetValue(1.0)
     endif
     UI.CloseCustomMenu()
 endEvent
