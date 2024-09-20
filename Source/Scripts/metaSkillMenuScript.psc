@@ -52,9 +52,10 @@ function register_events()
 endfunction
 
 function load_data()
+    string poolName = "menuInfoPool"
     ; turn files to array of strings
-    int CSFFiles = JValue.readFromDirectory("data/SKSE/Plugins/", ".json")
-    jvalue.writetofile(CSFFiles, "data/interface/MetaSkillsMenu/test.json")
+    int CSFFiles = JValue.addToPool(JValue.readFromDirectory("data/SKSE/Plugins/CustomSkills/", ".json"), poolName)
+    jvalue.writetofile(CSFFiles, "data/interface/MetaSkillsMenu/rawData.json")
 
     ; start at the beginning
     string filekey = jmap.nextkey(CSFFiles)
@@ -62,34 +63,33 @@ function load_data()
     ; read hidedata
     int hideData
     if jcontainers.fileExistsAtPath("data/interface/MetaSkillsMenu/MSMHidden.json")
-        hideData = JValue.readFromFile("data/interface/MetaSkillsMenu/MSMHidden.json")
+        hideData = JValue.addToPool(JValue.readFromFile("data/interface/MetaSkillsMenu/MSMHidden.json"), poolName)
     Else
-        hideData = Jmap.Object()
+        hideData = JValue.addToPool(Jmap.Object(), poolName)
     endif
-    int allConfigsFormatted = Jmap.Object()
+    int allConfigsFormatted = JValue.addToPool(Jmap.Object(), poolName)
     ; WARNING
     ; We only load skill groups with a `showMenu`
     while filekey
         ; grab object associated with key
         int fileobj = jmap.getobj(CSFFiles, filekey)
         string pluginName = StringUtil.Split(jmap.getstr(fileobj, "showMenu"), "|")[0]
+        string fileName = StringUtil.Split(filekey, ".")[0]
         ;; oh my god why did I write this terrible code, it's jibberish
         ; yeah it sure is, did you write it on your phone or something?
-        writelog("Loading skills for plugin: " + pluginName)
+        writelog("Loading skills from file: " + filekey)
         ; no clue what this is about, I think it's to do with old versions
         if ((!b_CustomSkillsPapryusAPIExists && JMap.getInt(fileobj, "CSFSKSE")))
-            writelog("CSFSKSE Mod installed, but papyrus api not found: "+pluginName)
+            writelog("CSFSKSE Mod installed, but papyrus api not found: " + pluginName)
         else
             if (game.IsPluginInstalled(pluginName))
                 ; copy the object (we'll change it and return it)
                 int retobj = jvalue.deepcopy(fileobj)
 
-                string pluginNameFormatted = StringUtil.Split(pluginName, ".")[0]
-
                 ; Skill groups don't have a `Name` or `Description`, so we make do
                 ; The user will have to set this manually
-                JMap.setStr(retobj, "Name", pluginNameFormatted)
-                JMap.setStr(retobj, "Description", "Skills belonging to " + pluginNameFormatted)
+                JMap.setStr(retobj, "name", fileName)
+                JMap.setStr(retobj, "description", "Skills belonging to " + fileName)
 
                 ; get icon location, set flag if exists
                 string icon_loc = jmap.getstr(fileobj, "icon_loc")
@@ -98,10 +98,10 @@ function load_data()
                 endif
 
                 ; adds retobj under the key asSkillId to config storage
-                jmap.setobj(allConfigsFormatted, asSkillId, retobj)
+                jmap.setobj(allConfigsFormatted, fileName, retobj)
 
                 ; check hideData for whether modNameThing is hidden
-                string hiddenPath = "." + asSkillId + ".hidden"
+                string hiddenPath = "." + fileName + ".hidden"
                 int valuetype = JValue.solvedValueType(hideData, hiddenPath)
                 if valuetype != 2 ; if not int, i.e. if we don't find it
                     ; we go into the file and set it as false
@@ -110,14 +110,13 @@ function load_data()
                 ; *now* we read it from the file
                 jmap.setInt(retObj, "hidden", JValue.SolveInt(hideData, hiddenPath))
             else
-                writelog("FAILED TO FIND MOD, MISSING ESP: " + pluginName)
+                writelog("FAILED TO FIND MOD, MISSING ESP: " + pluginName, 2)
             endif
         endif
         ; go to next filekey
         filekey = jmap.nextkey(CSFFiles, filekey)
     endwhile
-    ; delete y
-    jvalue.release(CSFFiles)
+
     ; check if we even found anything
     if jmap.count(allConfigsFormatted) > 0
         b_SkillTreesInstalled = true
@@ -128,8 +127,8 @@ function load_data()
     ; write our data to files
     jvalue.writetofile(hideData, "data/interface/MetaSkillsMenu/MSMHidden.json")
     jvalue.writetofile(allConfigsFormatted, "data/interface/MetaSkillsMenu/MSMData.json")
-    jvalue.release(hideData)
-    jvalue.release(allConfigsFormatted)
+
+    JValue.cleanPool(poolName)
 endfunction
 
 event OpenMenu(string eventName, string strArg, float numArg, Form sender)
@@ -154,18 +153,14 @@ function doCloseMenu()
 endFunction
 
 event SelectedMenu(string eventName, string strArg, float numArg, Form sender)
-    int MSMData = JValue.readFromFile("data/interface/MetaSkillsMenu/MSMData.json")
+    int MSMData = JValue.addToPool(JValue.readFromFile("data/interface/MetaSkillsMenu/MSMData.json"), "menuData")
     ; get chosen skill object from config
-    int modObject = JMap.getObj(MSMData, strArg)
-    int CSFSKSESkill = JMap.getInt(modObject, "CSFSKSE")
-    if (b_CustomSkillsPapryusAPIExists && CSFSKSESkill)
-        string skillId = JMap.getStr(modObject, "id")
-        CustomSkills.OpenCustomSkillMenu(skillId)
-    else
-        Form showMenuVar = JMap.getForm(modObject, "showMenu")
-        (showMenuVar as GlobalVariable).SetValue(1.0)
-    endif
+    int modObject = JValue.addToPool(JMap.getObj(MSMData, strArg), "menuData")
+    Form showMenuVar = JMap.getForm(modObject, "showMenu")
+    WriteLog("Found this global variable: " + showMenuVar.GetName())
+    (showMenuVar as GlobalVariable).Mod(1.0)
     UI.CloseCustomMenu()
+    JValue.cleanPool("menuData")
 endEvent
 
 function WriteLog(string printMessage, int error = 0)
