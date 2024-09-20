@@ -32,7 +32,7 @@ env:
   ESP_NAMES: ("metaSkillMenu")
   # The name of the game you're making the mod for - identical to the game's folder
   GAME: "Skyrim Special Edition"
-  PROJECT_NAME: Custom Skills Menu (CSF v3)
+  PROJECT_NAME: CustomSkillsMenuCSFv3
   # Do not edit
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
