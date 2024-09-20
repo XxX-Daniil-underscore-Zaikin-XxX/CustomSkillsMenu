@@ -156,13 +156,14 @@ endFunction
 
 ; CSF presents forms as e.g. example.esp|0xD61 - not compabitle with JContainers
 Form function getFormFromCsfString(string csfString)
-    string formFile = StringUtil.Split(csfString, "|")[0]
-    int formId = PO3_SKSEFunctions.StringToInt(StringUtil.Split(csfString, "|")[1])
+    string[] csfForm = StringUtil.Split(csfString, "|")
+    string formFile = csfForm[0]
+    int formId = PO3_SKSEFunctions.StringToInt(csfForm[1])
 
     Form retForm = Game.GetFormFromFile(formId, formFile)
 
     if (!retForm) 
-        WriteLog("Could not find form " + formId + " in mod " + formFile, 1)
+        WriteLog("Could not find form " + csfForm[1] + " in mod " + formFile, 1)
     endif
 
     return retForm
