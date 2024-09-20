@@ -71,8 +71,9 @@ function load_data()
     ; WARNING
     ; We only load skill groups with a `showMenu`
     while filekey
+        string filePoolName = "iterateFilePool"
         ; grab object associated with key
-        int fileobj = jmap.getobj(CSFFiles, filekey)
+        int fileobj = JValue.addToPool(jmap.getobj(CSFFiles, filekey), filePoolName)
         string pluginName = StringUtil.Split(jmap.getstr(fileobj, "showMenu"), "|")[0]
         string fileName = StringUtil.Split(filekey, ".")[0]
         ;; oh my god why did I write this terrible code, it's jibberish
@@ -84,7 +85,7 @@ function load_data()
         else
             if (game.IsPluginInstalled(pluginName))
                 ; copy the object (we'll change it and return it)
-                int retobj = jvalue.deepcopy(fileobj)
+                int retobj = JValue.addToPool(jvalue.deepcopy(fileobj), filePoolName)
 
                 ; Skill groups don't have a `Name` or `Description`, so we make do
                 ; The user will have to set this manually
@@ -115,6 +116,7 @@ function load_data()
         endif
         ; go to next filekey
         filekey = jmap.nextkey(CSFFiles, filekey)
+        JValue.cleanPool(filePoolName)
     endwhile
 
     ; check if we even found anything
