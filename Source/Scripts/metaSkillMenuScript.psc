@@ -6,8 +6,6 @@ bool b_CustomSkillsExists = false
 bool b_SkillTreesInstalled = false
 bool b_CustomSkillsPapryusAPIExists = false
 
-string asSkillId = ""
-
 event OnInit()
     startup()
 endEvent
@@ -174,7 +172,7 @@ event SelectedMenu(string eventName, string strArg, float numArg, Form sender)
     ; get chosen skill object from config
     int modObject = JValue.addToPool(JMap.getObj(MSMData, strArg), "menuData")
     GlobalVariable showMenuVar = getFormFromCsfString(JMap.getStr(modObject, "showMenu")) as GlobalVariable
-    (showMenuVar as GlobalVariable).Mod(1.0)
+    showMenuVar.Mod(1.0)
     UI.CloseCustomMenu()
     JValue.cleanPool("menuData")
 endEvent
