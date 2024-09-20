@@ -254,6 +254,7 @@ jobs:
           cp "${esps[0]}.esp" "${{ github.workspace }}/to-pack/000 Required - Core Files/${esps[0]}.esp"
           cp "${esps[1]}.esp" "${{ github.workspace }}/to-pack/100 Optional - Example Patch/${esps[1]}.esp"
           cp -a "Scripts" "${{ github.workspace }}/to-pack/000 Required - Core Files/Scripts"
+          cp -a "dist/interface" "${{ github.workspace }}/to-pack/000 Required - Core Files/interface"
           cp -a "Source" "${{ github.workspace }}/to-pack/200 Optional - Script Sources/Source"
           cp -a "FOMOD Files/fomod" "${{ github.workspace }}/to-pack/fomod"
           cp -a "FOMOD Files/images" "${{ github.workspace }}/to-pack/images"
