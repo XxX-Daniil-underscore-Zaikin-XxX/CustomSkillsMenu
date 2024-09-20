@@ -27,6 +27,7 @@
         <Import>https://github.com/Exit-9B/MCM-Helper/tree/main/scripts/private</Import>
         <Import>https://github.com/Exit-9B/MCM-Helper/tree/main/scripts/public</Import>
         <Import>https://github.com/Exit-9B/CustomSkills/tree/main/scripts</Import>
+        <Import>https://github.com/powerof3/PapyrusExtenderSSE/tree/master/Papyrus/Source/scripts</Import>
         <Import>@gamepath\Data\Scripts\Source</Import>
     </Imports>
     <Folders>

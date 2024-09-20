@@ -154,12 +154,25 @@ function doCloseMenu()
     UI.Invoke("TweenMenu", "_root.TweenMenu_mc.ShowMenu")
 endFunction
 
+; CSF presents forms as e.g. example.esp|0xD61 - not compabitle with JContainers
+Form function getFormFromCsfString(string csfString)
+    string formFile = StringUtil.Split(csfString, "|")[0]
+    int formId = PO3_SKSEFunctions.StringToInt(StringUtil.Split(csfString, "|")[1])
+
+    Form retForm = Game.GetFormFromFile(formId, formFile)
+
+    if (!retForm) 
+        WriteLog("Could not find form " + formId + " in mod " + formFile, 1)
+    endif
+
+    return retForm
+EndFunction
+
 event SelectedMenu(string eventName, string strArg, float numArg, Form sender)
     int MSMData = JValue.addToPool(JValue.readFromFile("data/interface/MetaSkillsMenu/MSMData.json"), "menuData")
     ; get chosen skill object from config
     int modObject = JValue.addToPool(JMap.getObj(MSMData, strArg), "menuData")
-    Form showMenuVar = JMap.getForm(modObject, "showMenu")
-    WriteLog("Found this global variable: " + showMenuVar.GetName())
+    GlobalVariable showMenuVar = getFormFromCsfString(JMap.getStr(modObject, "showMenu")) as GlobalVariable
     (showMenuVar as GlobalVariable).Mod(1.0)
     UI.CloseCustomMenu()
     JValue.cleanPool("menuData")
