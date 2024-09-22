@@ -189,7 +189,8 @@ jobs:
         - name: Fetch Caprica Prerelease
           if: steps.cache-com.outputs.cache-hit != 'true'
           shell: bash
-          run: gh run download 10848769493 -R Orvid/Caprica
+          # temporarily download Caprica from run instead of release
+          run: gh run download 10979332233 -R Orvid/Caprica
           env:
             GH_TOKEN: ${{ github.token }}
 
@@ -247,7 +248,6 @@ jobs:
           mkdir "${{ github.workspace }}/to-pack/100 Optional - Example Patch"
           mkdir "${{ github.workspace }}/to-pack/200 Optional - Script Sources"
           cp "${esps[0]}.esp" "${{ github.workspace }}/to-pack/000 Required - Core Files/${esps[0]}.esp"
-          cp "${esps[1]}.esp" "${{ github.workspace }}/to-pack/100 Optional - Example Patch/${esps[1]}.esp"
           cp -a "Scripts" "${{ github.workspace }}/to-pack/000 Required - Core Files/Scripts"
           cp -a "dist/interface" "${{ github.workspace }}/to-pack/000 Required - Core Files/interface"
           cp -a "Source" "${{ github.workspace }}/to-pack/200 Optional - Script Sources/Source"
