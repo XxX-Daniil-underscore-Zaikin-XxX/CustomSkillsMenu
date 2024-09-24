@@ -49,6 +49,7 @@ function register_events()
     registerformodevent("MetaSkillMenu_Selection", "SelectedMenu")
 endfunction
 
+; Attempts to read an object from a given filepath. If it doesn't succeed, return an empty object
 int function tryGetObjFromFile(string filePath, string poolName)
     if jcontainers.fileExistsAtPath(filePath)
         return JValue.addToPool(JValue.readFromFile(filePath), poolName)
@@ -69,19 +70,20 @@ function load_data()
 
     ; pre-format our data
     int loadedConfigs = JMap.object()
-    JMap.setObj(savedData, "original", loadedConfigs)
-    JMap.setObj(CSFFiles, "new", loadedConfigs)
-    ;int allConfigsFormatted = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.gamerMove(jobject)"), poolName)
-    int allConfigsFormatted = JValue.addToPool(JValue.evalLuaObj(CSFFiles, "return msm.truncate(jobject)"), poolName)
+    JMap.setObj(loadedConfigs, "original", savedData)
+    JMap.setObj(loadedConfigs, "new", CSFFiles)
+    int allConfigsTrimmed = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.loadCustomMenu(jobject)"), poolName)
+
+    int allConfigsFormatted = JValue.addToPool(JMap.object(), poolName)
 
     ; start at the beginning
-    string filekey = jmap.nextkey(allConfigsFormatted)
+    string filekey = jmap.nextkey(allConfigsTrimmed)
     ; WARNING
     ; We only load skill groups with a `ShowMenu`
     while filekey
         string filePoolName = "iterateFilePool"
         ; grab object associated with key
-        int fileobj = JValue.addToPool(jmap.getobj(allConfigsFormatted, filekey), filePoolName)
+        int fileobj = JValue.addToPool(jmap.getobj(allConfigsTrimmed, filekey), filePoolName)
         string pluginName = jmap.getstr(fileobj, "plugin")
         ;; oh my god why did I write this terrible code, it's jibberish
         ; yeah it sure is, did you write it on your phone or something?
@@ -114,7 +116,7 @@ function load_data()
         endif
 
         ; go to next filekey
-        filekey = jmap.nextkey(CSFFiles, filekey)
+        filekey = jmap.nextkey(allConfigsTrimmed, filekey)
         JValue.cleanPool(filePoolName)
     endwhile
 
@@ -158,7 +160,7 @@ endFunction
 
 event SelectedMenu(string eventName, string strArg, float numArg, Form sender)
     int MSMData = JValue.addToPool(JDB.solveObj(".CustomSkillsMenuv3.MenuData"), "menuData")
-    if (MSMData == 0)
+    if (!JValue.isExists(MSMData))
         MSMData = JValue.addToPool(JValue.readFromFile("data/interface/MetaSkillsMenu/MSMData.json"), "menuData")
         JDB.solveObjSetter(".CustomSkillsMenuv3.MenuData", MSMData, createMissingKeys=true)
     endif

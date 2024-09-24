@@ -1,7 +1,5 @@
 -- truncates a custom skills entry and leaves behind only the stuff CSM needs
 
-local jc = jrequire 'jc'
-
 local msm = {}
 
 -- we receive our collection of every Custom Skill at once
@@ -10,8 +8,11 @@ function msm.truncate(collection)
     local ret = JMap.object()
 
     for filePath, skillSet in pairs(collection) do
+        --extract filename
         local fileName = filePath:match("^(.+)%.%w+")
         local processedSkill = msm.processSkill(fileName, skillSet)
+
+        --sanity check
         if processedSkill ~= nil then
             ret[fileName] = processedSkill
         end
@@ -20,20 +21,26 @@ function msm.truncate(collection)
     return ret
 end
 
+-- Trim and format CSF json into only everything that CSM needs
 function msm.processSkill(fileName, skillSet)
     local showMenu = skillSet["showMenu"]
+
+    --sanity check
     if fileName == nil or showMenu == nil or showMenu == "" then
         return nil
     end
     local menuEntry = JMap.object()
 
-    local plugin = showMenu:match("^[%w_%-%.]+")
+    --extract plugin from form
+    local plugin = showMenu:match("^(.-)|")
 
+    -- standardize hex format
     local isHexFormat = showMenu:find("%|0x")
     if isHexFormat == nil then
         showMenu = showMenu:gsub("%|(%w+)", "%|0x%1")
     end
 
+    -- generate CSM data
     menuEntry["Name"] = fileName
     menuEntry["Description"] = "Skills belonging to " .. fileName
     menuEntry["ShowMenu"] = "__formData|" .. showMenu
@@ -47,7 +54,7 @@ function msm.processSkill(fileName, skillSet)
     return menuEntry
 end
 
--- so we can use the original to customise some values
+-- Replace new Name, Description, and icon_loc with original
 function msm.mergeMenuOptions(original, new)
     local ret = JMap.object()
 
@@ -63,12 +70,9 @@ function msm.mergeMenuOptions(original, new)
     return ret
 end
 
-function msm.loadCustomMenu(originalSettings, customSkills)
-    return msm.mergeMenuOptions(originalSettings, msm.truncate(customSkills))
-end
-
-function msm.gamerMove(gamerArray)
-    return msm.loadCustomMenu(gamerArray["original"], gamerArray["new"])
+-- forced to use this helper because JContainers only allows one argument
+function msm.loadCustomMenu(settings)
+    return msm.mergeMenuOptions(settings["original"], msm.truncate(settings["new"]))
 end
 
 -- sets value from tableFrom to tableTo if key exists in tableFrom
