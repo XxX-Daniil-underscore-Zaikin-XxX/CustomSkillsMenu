@@ -69,26 +69,35 @@ function load_data()
     int savedData = tryGetObjFromFile("data/interface/MetaSkillsMenu/MSMData.json", poolName)
 
     ; pre-format our data
-    int loadedConfigs = JMap.object()
+    int loadedConfigs = JValue.addToPool(JMap.object(), poolName)
     JMap.setObj(loadedConfigs, "original", savedData)
     JMap.setObj(loadedConfigs, "new", CSFFiles)
     int allConfigsTrimmed = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.loadCustomMenu(jobject)"), poolName)
 
+    ; process hidden data also
+    int jConfWithHidden = JValue.addToPool(JMap.object(), poolName)
+    JMap.setObj(jConfWithHidden, "menus", allConfigsTrimmed)
+    JMap.setObj(jConfWithHidden, "hidden", hideData)
+    int jHiddenReturn = JValue.addToPool(JValue.evalLuaObj(jConfWithHidden, "return msm.applyHiddenHelper(jobject)"), poolName)
+
+    int jCustomMenuPreFormatted = JValue.addToPool(JMap.getObj(jHiddenReturn, "menus"), poolName)
+
     int allConfigsFormatted = JValue.addToPool(JMap.object(), poolName)
 
     ; start at the beginning
-    string filekey = jmap.nextkey(allConfigsTrimmed)
+    string filekey = jmap.nextkey(jCustomMenuPreFormatted)
     ; WARNING
     ; We only load skill groups with a `ShowMenu`
     while filekey
         string filePoolName = "iterateFilePool"
         ; grab object associated with key
-        int fileobj = JValue.addToPool(jmap.getobj(allConfigsTrimmed, filekey), filePoolName)
+        int fileobj = JValue.addToPool(jmap.getobj(jCustomMenuPreFormatted, filekey), filePoolName)
         string pluginName = jmap.getstr(fileobj, "plugin")
         ;; oh my god why did I write this terrible code, it's jibberish
         ; yeah it sure is, did you write it on your phone or something?
-        writelog("Loading skills from file: " + filekey)
-        WriteLog("Using this .esp: " + pluginName)
+        Writelog("Loading skills from file: " + filekey)
+        WriteLog("Using this to display menu: " + JMap.getStr(fileobj, "ShowMenu"))
+        WriteLog("Hidden? " + JMap.getInt(fileobj, "hidden"))
         if (game.IsPluginInstalled(pluginName))
             ; copy the object (we'll change it and return it)
             int retobj = JValue.addToPool(jvalue.deepcopy(fileobj), filePoolName)
@@ -101,22 +110,12 @@ function load_data()
 
             ; adds retobj under the key asSkillId to config storage
             jmap.setobj(allConfigsFormatted, filekey, retobj)
-
-            ; check hideData for whether modNameThing is hidden
-            string hiddenPath = "." + filekey + ".hidden"
-            int valuetype = JValue.solvedValueType(hideData, hiddenPath)
-            if valuetype != 2 ; if not int, i.e. if we don't find it
-                ; we go into the file and set it as false
-                JValue.SolveIntSetter(hideData, hiddenPath, false as int, true)
-            endif ; MOD NAME THING HUH, WHAT A FUCKING AMAZING NAME ; haha, I'm keeping it then lol
-            ; *now* we read it from the file
-            jmap.setInt(retObj, "hidden", JValue.SolveInt(hideData, hiddenPath))
         else
             writelog("FAILED TO FIND MOD, MISSING ESP: " + pluginName, 2)
         endif
 
         ; go to next filekey
-        filekey = jmap.nextkey(allConfigsTrimmed, filekey)
+        filekey = jmap.nextkey(jCustomMenuPreFormatted, filekey)
         JValue.cleanPool(filePoolName)
     endwhile
 
@@ -128,7 +127,7 @@ function load_data()
     endif
 
     ; write our data to files
-    jvalue.writetofile(hideData, "data/interface/MetaSkillsMenu/MSMHidden.json")
+    jvalue.writetofile(JMap.getObj(jHiddenReturn, "hidden"), "data/interface/MetaSkillsMenu/MSMHidden.json")
     jvalue.writetofile(allConfigsFormatted, "data/interface/MetaSkillsMenu/MSMData.json")
 
     ; write to DB for faster access

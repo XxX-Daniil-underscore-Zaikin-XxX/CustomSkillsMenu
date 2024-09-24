@@ -70,6 +70,48 @@ function msm.mergeMenuOptions(original, new)
     return ret
 end
 
+function msm.applyHiddenHelper(configs)
+    return msm.applyHidden(configs["menus"], configs["hidden"])
+end
+
+-- searches through hiddenOptions and sets the hidden option in menus accordingly
+-- at the same time, adds all menus to hiddenOptions
+function msm.applyHidden(menus, hiddenOptions)
+    local ret = JMap.object()
+
+    ret["menus"] = msm.setHidden(menus, hiddenOptions)
+    ret["hidden"] = msm.transferToHidden(menus, hiddenOptions)
+
+    return ret
+end
+
+-- sets the hidden key of each menu item based on the hiddenoption
+function msm.setHidden(menus, hiddenOptions)
+    for menuName, hidden in pairs(hiddenOptions) do
+        local menu = menus[menuName]
+        if menu ~= nil then
+            menu["hidden"] = hidden
+        end
+    end
+
+    return menus
+end
+
+-- transfer menus to hiddenOptions to preserve original mod's functionality
+function msm.transferToHidden(menus, hiddenOptions)
+    for menuName, menu in pairs(menus) do
+        if hiddenOptions[menuName] == nil then
+            local newHidden = 0
+            if menu["hidden"] ~= nil then
+                newHidden = menu["hidden"]
+            end
+            hiddenOptions[menuName] = {hidden = newHidden}
+        end
+    end
+    
+    return hiddenOptions
+end
+
 -- forced to use this helper because JContainers only allows one argument
 function msm.loadCustomMenu(settings)
     return msm.mergeMenuOptions(settings["original"], msm.truncate(settings["new"]))
