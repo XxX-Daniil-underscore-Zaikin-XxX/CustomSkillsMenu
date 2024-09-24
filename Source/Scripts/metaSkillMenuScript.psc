@@ -49,13 +49,6 @@ function register_events()
     registerformodevent("MetaSkillMenu_Selection", "SelectedMenu")
 endfunction
 
-; sets value of object at key if key doesn't exist
-function setValueIfNoKey(int jObj, string searchKey, string value)
-    if (!JMap.hasKey(jObj, key=searchKey))
-        JMap.setStr(jObj, searchKey, value)
-    endif
-endfunction
-
 int function tryGetObjFromFile(string filePath, string poolName)
     if jcontainers.fileExistsAtPath(filePath)
         return JValue.addToPool(JValue.readFromFile(filePath), poolName)
@@ -78,35 +71,8 @@ function load_data()
     int loadedConfigs = JMap.object()
     JMap.setObj(savedData, "original", loadedConfigs)
     JMap.setObj(CSFFiles, "new", loadedConfigs)
-    int test = Jmap.getobj(CSFFiles, "VicHand2Hand.json")
-    WriteLog(Jmap.getstr(test, "showMenu"))
-    WriteLog(JValue.evalLuaStr(CSFFiles, "return msm.piss(jobject)"))
     ;int allConfigsFormatted = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.gamerMove(jobject)"), poolName)
     int allConfigsFormatted = JValue.addToPool(JValue.evalLuaObj(CSFFiles, "return msm.truncate(jobject)"), poolName)
-
-    int testSkill = JValue.evalLuaObj(test, "return msm.processSkill('VicHand2Hand', jobject)")
-    WriteLog("holy shit this is so frustrating: " + JMap.getStr(testSkill, "Name"))
-    WriteLog("holy shit this is so frustrating: " + JMap.getStr(testSkill, "Description"))
-    WriteLog("holy shit this is so frustrating: " + JMap.getStr(testSkill, "ShowMenu"))
-    WriteLog("holy shit this is so frustrating: " + JMap.getStr(testSkill, "icon_loc"))
-    WriteLog("holy shit this is so frustrating: " + JMap.getStr(testSkill, "plugin"))
-
-    int testObj = JValue.evalLuaObj(CSFFiles, "return msm.shit(jobject)")
-
-    string filekeytest = jmap.nextkey(testObj)
-
-    while filekeytest
-        WriteLog("fuck me bloody this fucking sucks:" + filekeytest)
-    ; WriteLog("fuck me bloody this fucking sucks:" + JValue.solveStr(testobj, "myskill.Name"))
-    ; WriteLog("fuck me bloody this fucking sucks:" + JValue.solveStr(testobj, "myskill.Description"))
-        WriteLog("fuck me bloody this fucking sucks:" + JValue.solveStr(testobj, ".myskill.showMenu"))
-        WriteLog("fuck me bloody this fucking sucks:" + JMap.haskey(testObj, filekeytest))
-        int fuck = JMap.getobj(testobj, filekeytest)
-        WriteLog("fuck me bloody this fucking sucks:" + JMap.getstr(fuck, "showMenu"))
-        filekeytest = jmap.nextKey(testObj, filekeytest)
-    endwhile
-
-    
 
     ; start at the beginning
     string filekey = jmap.nextkey(allConfigsFormatted)
@@ -116,7 +82,6 @@ function load_data()
         string filePoolName = "iterateFilePool"
         ; grab object associated with key
         int fileobj = JValue.addToPool(jmap.getobj(allConfigsFormatted, filekey), filePoolName)
-        WriteLog("sanity check: " + JMap.getStr(fileobj, "Name"))
         string pluginName = jmap.getstr(fileobj, "plugin")
         ;; oh my god why did I write this terrible code, it's jibberish
         ; yeah it sure is, did you write it on your phone or something?
@@ -163,21 +128,11 @@ function load_data()
     ; write our data to files
     jvalue.writetofile(hideData, "data/interface/MetaSkillsMenu/MSMHidden.json")
     jvalue.writetofile(allConfigsFormatted, "data/interface/MetaSkillsMenu/MSMData.json")
-    JDB.solveObjSetter(".CustomSkillsMenuv3.MenuData", allConfigsFormatted, createMissingKeys=true)
-    int testFinal = JDB.solveobj(".CustomSkillsMenuv3.MenuData")
-    string testkey = JMap.nextkey(testFinal)
-    while testkey
-        WriteLog("This fucking sucks dude: " + testkey)
-        testkey = JMap.nextKey(testFinal, testkey)
-    endwhile
-    JValue.cleanPool(poolName)
 
-    int testFinal2 = JDB.solveobj(".CustomSkillsMenuv3.MenuData")
-    testkey = JMap.nextkey(testFinal2)
-    while testkey
-        WriteLog("This fucking sucks dude 2: " + testkey)
-        testkey = JMap.nextKey(testFinal2, testkey)
-    endwhile
+    ; write to DB for faster access
+    JDB.solveObjSetter(".CustomSkillsMenuv3.MenuData", allConfigsFormatted, createMissingKeys=true)
+
+    JValue.cleanPool(poolName)
 endfunction
 
 event OpenMenu(string eventName, string strArg, float numArg, Form sender)
@@ -201,21 +156,6 @@ function doCloseMenu()
     UI.Invoke("TweenMenu", "_root.TweenMenu_mc.ShowMenu")
 endFunction
 
-; CSF presents forms as e.g. example.esp|0xD61 - not compabitle with JContainers
-Form function getFormFromCsfString(string csfString)
-    string[] csfForm = StringUtil.Split(csfString, "|")
-    string formFile = csfForm[0]
-    int formId = PO3_SKSEFunctions.StringToInt(csfForm[1])
-
-    Form retForm = Game.GetFormFromFile(formId, formFile)
-
-    if (!retForm) 
-        WriteLog("Could not find form " + csfForm[1] + " in mod " + formFile, 1)
-    endif
-
-    return retForm
-EndFunction
-
 event SelectedMenu(string eventName, string strArg, float numArg, Form sender)
     int MSMData = JValue.addToPool(JDB.solveObj(".CustomSkillsMenuv3.MenuData"), "menuData")
     if (MSMData == 0)
@@ -224,9 +164,7 @@ event SelectedMenu(string eventName, string strArg, float numArg, Form sender)
     endif
     ; get chosen skill object from config
     int modObject = JValue.addToPool(JMap.getObj(MSMData, strArg), "menuData")
-    WriteLog("Did we find " + strArg + "? " + JValue.isExists(modObject))
-    WriteLog("alright, this shit sucks: " + JMap.getStr(modObject, "ShowMenu"))
-    WriteLog("I will cry: " + JMap.valueType(modObject, "ShowMenu"))
+
     GlobalVariable showMenuVar = JString.decodeFormStringToForm(JMap.getStr(modObject, "ShowMenu")) as GlobalVariable
     showMenuVar.Mod(1.0)
     UI.CloseCustomMenu()

@@ -14,25 +14,7 @@ function msm.truncate(collection)
         local processedSkill = msm.processSkill(fileName, skillSet)
         if processedSkill ~= nil then
             ret[fileName] = processedSkill
-        else
-            local fuck = JMap.object()
-            fuck["Name"] = "go fuck yourself"
-            ret[fileName] = fuck
         end
-        
-    end
-
-    return ret
-end
-
--- we receive our collection of every Custom Skill at once
--- and we return a trimmed version with only what CSM needs
-function msm.shit(collection)
-    local ret = JMap.object()
-
-    for filePath, skillSet in pairs(collection) do
-        local fileName = filePath:match("^(.+)%.%w+")
-        ret[fileName] = skillSet
     end
 
     return ret
@@ -63,30 +45,6 @@ function msm.processSkill(fileName, skillSet)
     menuEntry["plugin"] = plugin
 
     return menuEntry
-end
-
--- --This function finds the filename when given a complete path 
--- --From https://help.interfaceware.com/v6/extract-a-filename-from-a-file-path
--- function msm.getFilename(path)
---     local start, finish = path:find('[%w%s!-={-|]+[_%.].+')
---     return path:sub(start,#path)
--- end
-
-function msm.piss(collection)
-    local ret = ""
-    for filePath, skillSet in pairs(collection) do
-        local thing = skillSet["showMenu"]
-        
-        if thing ~= nil then
-            ret = ret .. " ORG: " .. thing
-            local otherThing = thing:match("^[%w_%-%.]+")--string.sub(thing, string.find(thing, "^[]"))string.gsub(thing, "|*", "")
-            if otherThing ~= nil then
-                ret = ret .. " NEW: " .. otherThing
-            end
-        end
-    end
-
-    return ret
 end
 
 -- so we can use the original to customise some values
