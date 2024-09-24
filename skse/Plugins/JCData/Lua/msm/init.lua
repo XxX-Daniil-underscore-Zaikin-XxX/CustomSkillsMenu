@@ -60,10 +60,11 @@ function msm.mergeMenuOptions(original, new)
 
     for name, menuSetting in pairs(new) do
         local setting = menuSetting
-        msm.setIfExists(original[name], setting, "Name")
-        msm.setIfExists(original[name], setting, "Description")
-        msm.setIfExists(original[name], setting, "icon_loc")
-
+        if original[name] ~= nil then
+            msm.setIfExists(original[name], setting, "Name")
+            msm.setIfExists(original[name], setting, "Description")
+            msm.setIfExists(original[name], setting, "icon_loc")
+        end
         ret[name] = setting
     end
 
@@ -88,12 +89,20 @@ end
 -- sets the hidden key of each menu item based on the hiddenoption
 function msm.setHidden(menus, hiddenOptions)
     for menuName, hidden in pairs(hiddenOptions) do
-        local menu = menus[menuName]
-        if menu ~= nil then
-            menu["hidden"] = hidden
+        if hidden == nil then
+            goto continue
         end
+        local menu = menus[menuName]
+        local hiddenSwitch = hidden["hidden"]
+        if hiddenSwitch ~= nil then
+            if menu ~= nil then
+                menu["hidden"] = hiddenSwitch
+            end
+        else
+            menu["hidden"] = false
+        end
+        ::continue::
     end
-
     return menus
 end
 
@@ -101,14 +110,15 @@ end
 function msm.transferToHidden(menus, hiddenOptions)
     for menuName, menu in pairs(menus) do
         if hiddenOptions[menuName] == nil then
-            local newHidden = 0
+            local newHidden = false
             if menu["hidden"] ~= nil then
                 newHidden = menu["hidden"]
             end
-            hiddenOptions[menuName] = {hidden = newHidden}
+            local newHiddenObj = JMap.object()
+            newHiddenObj["hidden"] = newHidden
+            hiddenOptions[menuName] = newHiddenObj
         end
     end
-    
     return hiddenOptions
 end
 
