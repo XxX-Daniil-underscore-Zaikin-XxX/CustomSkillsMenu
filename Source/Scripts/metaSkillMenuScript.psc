@@ -1,10 +1,14 @@
 Scriptname metaSkillMenuScript extends Quest  
 {Controller script for MetaSkillMenu}
-; Sorry for anybody reading this, this is not a good mod to learn from. I'm doing some weird shit here.
 
+; whether the mod and its requirements are installed
 bool b_CustomSkillsExists = false
+; whether any Custom Skills are installed
 bool b_SkillTreesInstalled = false
+; whether the Custom Skills native api is installed
 bool b_CustomSkillsPapryusAPIExists = false
+; whether any Custom Skills are actually viewable (i.e. not hidden)
+bool b_SkillTreesPresent = false
 
 event OnInit()
     startup()
@@ -102,6 +106,11 @@ function load_data()
             ; copy the object (we'll change it and return it)
             int retobj = JValue.addToPool(jvalue.deepcopy(fileobj), filePoolName)
 
+            ; if at least one is unhidden, we set it to true
+            if JMap.getInt(fileobj, "hidden") == 0
+                b_SkillTreesPresent = True
+            endif
+
             ; get icon location, set flag if exists
             string icon_loc = jmap.getstr(fileobj, "icon_loc")
             if JContainers.fileExistsAtPath(icon_loc)
@@ -141,8 +150,11 @@ event OpenMenu(string eventName, string strArg, float numArg, Form sender)
 endEvent
 
 function doOpenMenu()
-    if b_CustomSkillsExists && b_SkillTreesInstalled
+    if b_CustomSkillsExists && b_SkillTreesInstalled && b_SkillTreesPresent
         UI.OpenCustomMenu("MetaSkillsMenu/CustomMetaMenu")
+    elseif b_SkillTreesInstalled && !b_SkillTreesPresent
+        UI.Invoke("TweenMenu", "_root.TweenMenu_mc.ShowMenu")
+        Writelog("Skill trees found, but none accessible through this menu.", 1)
     else
         UI.Invoke("TweenMenu", "_root.TweenMenu_mc.ShowMenu")
         Writelog("No skill trees found, closing menu.", 1)
