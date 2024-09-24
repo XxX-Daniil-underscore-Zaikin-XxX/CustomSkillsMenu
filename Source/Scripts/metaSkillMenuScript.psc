@@ -70,9 +70,6 @@ function load_data()
     int CSFFiles = JValue.addToPool(JValue.readFromDirectory("data/SKSE/Plugins/CustomSkills/", ".json"), poolName)
     jvalue.writetofile(CSFFiles, "data/interface/MetaSkillsMenu/rawData.json")
 
-    ; start at the beginning
-    string filekey = jmap.nextkey(CSFFiles)
-
     ; read saved data
     int hideData = tryGetObjFromFile("data/interface/MetaSkillsMenu/MSMHidden.json", poolName)
     int savedData = tryGetObjFromFile("data/interface/MetaSkillsMenu/MSMData.json", poolName)
@@ -81,19 +78,50 @@ function load_data()
     int loadedConfigs = JMap.object()
     JMap.setObj(savedData, "original", loadedConfigs)
     JMap.setObj(CSFFiles, "new", loadedConfigs)
-    int allConfigsFormatted = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.gamerMove(jobject)"), poolName)
+    int test = Jmap.getobj(CSFFiles, "VicHand2Hand.json")
+    WriteLog(Jmap.getstr(test, "showMenu"))
+    WriteLog(JValue.evalLuaStr(CSFFiles, "return msm.piss(jobject)"))
+    ;int allConfigsFormatted = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.gamerMove(jobject)"), poolName)
+    int allConfigsFormatted = JValue.addToPool(JValue.evalLuaObj(CSFFiles, "return msm.truncate(jobject)"), poolName)
+
+    int testSkill = JValue.evalLuaObj(test, "return msm.processSkill('VicHand2Hand', jobject)")
+    WriteLog("holy shit this is so frustrating: " + JMap.getStr(testSkill, "Name"))
+    WriteLog("holy shit this is so frustrating: " + JMap.getStr(testSkill, "Description"))
+    WriteLog("holy shit this is so frustrating: " + JMap.getStr(testSkill, "ShowMenu"))
+    WriteLog("holy shit this is so frustrating: " + JMap.getStr(testSkill, "icon_loc"))
+    WriteLog("holy shit this is so frustrating: " + JMap.getStr(testSkill, "plugin"))
+
+    int testObj = JValue.evalLuaObj(CSFFiles, "return msm.shit(jobject)")
+
+    string filekeytest = jmap.nextkey(testObj)
+
+    while filekeytest
+        WriteLog("fuck me bloody this fucking sucks:" + filekeytest)
+    ; WriteLog("fuck me bloody this fucking sucks:" + JValue.solveStr(testobj, "myskill.Name"))
+    ; WriteLog("fuck me bloody this fucking sucks:" + JValue.solveStr(testobj, "myskill.Description"))
+        WriteLog("fuck me bloody this fucking sucks:" + JValue.solveStr(testobj, ".myskill.showMenu"))
+        WriteLog("fuck me bloody this fucking sucks:" + JMap.haskey(testObj, filekeytest))
+        int fuck = JMap.getobj(testobj, filekeytest)
+        WriteLog("fuck me bloody this fucking sucks:" + JMap.getstr(fuck, "showMenu"))
+        filekeytest = jmap.nextKey(testObj, filekeytest)
+    endwhile
+
+    
+
+    ; start at the beginning
+    string filekey = jmap.nextkey(allConfigsFormatted)
     ; WARNING
     ; We only load skill groups with a `ShowMenu`
     while filekey
         string filePoolName = "iterateFilePool"
         ; grab object associated with key
-        int fileobj = JValue.addToPool(jmap.getobj(CSFFiles, filekey), filePoolName)
-        string pluginName = StringUtil.Split(jmap.getstr(fileobj, "ShowMenu"), "|")[1]
-        string fileName = StringUtil.Split(filekey, ".")[0]
+        int fileobj = JValue.addToPool(jmap.getobj(allConfigsFormatted, filekey), filePoolName)
+        WriteLog("sanity check: " + JMap.getStr(fileobj, "Name"))
+        string pluginName = jmap.getstr(fileobj, "plugin")
         ;; oh my god why did I write this terrible code, it's jibberish
         ; yeah it sure is, did you write it on your phone or something?
         writelog("Loading skills from file: " + filekey)
-
+        WriteLog("Using this .esp: " + pluginName)
         if (game.IsPluginInstalled(pluginName))
             ; copy the object (we'll change it and return it)
             int retobj = JValue.addToPool(jvalue.deepcopy(fileobj), filePoolName)
@@ -105,10 +133,10 @@ function load_data()
             endif
 
             ; adds retobj under the key asSkillId to config storage
-            jmap.setobj(allConfigsFormatted, fileName, retobj)
+            jmap.setobj(allConfigsFormatted, filekey, retobj)
 
             ; check hideData for whether modNameThing is hidden
-            string hiddenPath = "." + fileName + ".hidden"
+            string hiddenPath = "." + filekey + ".hidden"
             int valuetype = JValue.solvedValueType(hideData, hiddenPath)
             if valuetype != 2 ; if not int, i.e. if we don't find it
                 ; we go into the file and set it as false
@@ -136,7 +164,20 @@ function load_data()
     jvalue.writetofile(hideData, "data/interface/MetaSkillsMenu/MSMHidden.json")
     jvalue.writetofile(allConfigsFormatted, "data/interface/MetaSkillsMenu/MSMData.json")
     JDB.solveObjSetter(".CustomSkillsMenuv3.MenuData", allConfigsFormatted, createMissingKeys=true)
+    int testFinal = JDB.solveobj(".CustomSkillsMenuv3.MenuData")
+    string testkey = JMap.nextkey(testFinal)
+    while testkey
+        WriteLog("This fucking sucks dude: " + testkey)
+        testkey = JMap.nextKey(testFinal, testkey)
+    endwhile
     JValue.cleanPool(poolName)
+
+    int testFinal2 = JDB.solveobj(".CustomSkillsMenuv3.MenuData")
+    testkey = JMap.nextkey(testFinal2)
+    while testkey
+        WriteLog("This fucking sucks dude 2: " + testkey)
+        testkey = JMap.nextKey(testFinal2, testkey)
+    endwhile
 endfunction
 
 event OpenMenu(string eventName, string strArg, float numArg, Form sender)
@@ -183,7 +224,10 @@ event SelectedMenu(string eventName, string strArg, float numArg, Form sender)
     endif
     ; get chosen skill object from config
     int modObject = JValue.addToPool(JMap.getObj(MSMData, strArg), "menuData")
-    GlobalVariable showMenuVar = JMap.getForm(MSMData, "ShowMenu") as GlobalVariable
+    WriteLog("Did we find " + strArg + "? " + JValue.isExists(modObject))
+    WriteLog("alright, this shit sucks: " + JMap.getStr(modObject, "ShowMenu"))
+    WriteLog("I will cry: " + JMap.valueType(modObject, "ShowMenu"))
+    GlobalVariable showMenuVar = JString.decodeFormStringToForm(JMap.getStr(modObject, "ShowMenu")) as GlobalVariable
     showMenuVar.Mod(1.0)
     UI.CloseCustomMenu()
     JValue.cleanPool("menuData")
