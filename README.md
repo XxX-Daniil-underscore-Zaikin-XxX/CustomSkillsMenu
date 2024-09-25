@@ -17,13 +17,19 @@ It should all work out-of-the-box - the Custom Skills Menu reads the Custom Skil
 
 ## Configuration
 
-You may find that the generated data is generic and poorly formatted. For now, you can fix this yourself.
+You may find that the generated data is generic and poorly formatted. This you can configure manually, or download a pre-made configuration from elsewhere.
 
-The generated data can be found in `interface\MetaSkillsMenu\MSMData.json`, and you can edit the `Name` and `Description` as suits you. You may also want to change the `icon_loc` - this should be a path to a `.dds` file that'll serve as the icon.
+The configuration file is `interface\MetaSkillsMenu\MSMData.json`, and you can edit the `Name` and `Description` as suits you. You may also want to change the `icon_loc` - this should be a path to a `.dds` file that'll serve as the icon. Everything else should be left exactly as it is; any other changes should come automatically from other config files.
+
+> [!WARNING]
+> `MSMData.json` won't be in this mod's files. If you're using MO2, your best bet to find it is to use the `Data` tab in the right pane to search through your simulated directory.
 
 Some Custom Skills are, for one reason or another, intentionally inaccessible through normal gameplay. Using the Custom Skills Menu for these skills, then, may bypass some requirements and make for a worse experience.
 
-You can fix this my hiding the errant skills. Simply edit `interface\MetaSkillsMenu\MSMHidden.json` and set the skill set's `hidden` to `1`.
+You can fix this my hiding the errant skills. Simply edit `interface\MetaSkillsMenu\MSMHidden.json` and set the Custom Skill's `hidden` to `1`.
+
+> [!NOTE]
+> If you have configurations in your `MSMData.json` for skillsets you haven't installed, that's not a problem. CSM automatically disables them. It's perfectly fine to download one massive pre-made config for every Custom Skill under the sun.
 
 ## Requirements
 
