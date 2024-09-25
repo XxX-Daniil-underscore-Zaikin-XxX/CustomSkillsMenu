@@ -35,7 +35,8 @@
                 "showReuseMessage": true,
                 "clear": false,
                 "group": "build"
-            }
+            },
+            "problemMatcher": []
         },
         {
             "label": "Spriggit: Serialize project",
@@ -51,6 +52,7 @@
                 "clear": false,
                 "group": "build"
             },
+            "problemMatcher": [],
             "dependsOn": [
                 "Lint ESP"
             ]
@@ -70,17 +72,36 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "problemMatcher": []
         },
         {
             "label": "Copy files into dist",
             "type": "shell",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false,
+                "group": "build"
+            },
             "command": "cp -r -u ./skse/ dist/ && cp -r -u ./interface/ dist/",
             "problemMatcher": []
         },
         {
             "label": "Copy files out of dist",
             "type": "shell",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false,
+                "group": "build"
+            },
             "command": "cp -r -u dist/* .",
             "problemMatcher": []
         },

@@ -86,8 +86,6 @@ function load_data()
 
     int jCustomMenuPreFormatted = JValue.addToPool(JMap.getObj(jHiddenReturn, "menus"), poolName)
 
-    int allConfigsFormatted = JValue.addToPool(JMap.object(), poolName)
-
     ; start at the beginning
     string filekey = jmap.nextkey(jCustomMenuPreFormatted)
     ; WARNING
@@ -102,24 +100,15 @@ function load_data()
         WriteLog("Using this to display menu: " + JMap.getStr(fileobj, "ShowMenu"))
         WriteLog("Hidden? " + JMap.getInt(fileobj, "hidden"))
         if (game.IsPluginInstalled(pluginName))
-            ; copy the object (we'll change it and return it)
-            int retobj = JValue.addToPool(jvalue.deepcopy(fileobj), filePoolName)
-
             ; if at least one is unhidden, we set it to true
             if JMap.getInt(fileobj, "hidden") == 0
                 b_SkillTreesPresent = True
             endif
-
-            ; get icon location, set flag if exists
-            string icon_loc = jmap.getstr(fileobj, "icon_loc")
-            if JContainers.fileExistsAtPath(icon_loc)
-                jmap.setint(retobj, "icon_exists", true as int)
-            endif
-
-            ; adds retobj under the key asSkillId to config storage
-            jmap.setobj(allConfigsFormatted, filekey, retobj)
         else
-            writelog("FAILED TO FIND MOD, MISSING ESP: " + pluginName, 2)
+            string skillName = JMap.getStr(fileobj, "Name")
+            writelog("FAILED TO FIND MOD FOR " + skillName + ", MISSING ESP: " + pluginName, 0)
+            writelog("Hiding skillset " + skillName, 0)
+            JMap.setInt(fileobj, "hidden", 1)
         endif
 
         ; go to next filekey
@@ -128,7 +117,7 @@ function load_data()
     endwhile
 
     ; check if we even found anything
-    if jmap.count(allConfigsFormatted) > 0
+    if jmap.count(jCustomMenuPreFormatted) > 0
         b_SkillTreesInstalled = true
     Else
         b_SkillTreesInstalled = false
@@ -136,10 +125,10 @@ function load_data()
 
     ; write our data to files
     jvalue.writetofile(JMap.getObj(jHiddenReturn, "hidden"), "data/interface/MetaSkillsMenu/MSMHidden.json")
-    jvalue.writetofile(allConfigsFormatted, "data/interface/MetaSkillsMenu/MSMData.json")
+    jvalue.writetofile(jCustomMenuPreFormatted, "data/interface/MetaSkillsMenu/MSMData.json")
 
     ; write to DB for faster access
-    JDB.solveObjSetter(".CustomSkillsMenuv3.MenuData", allConfigsFormatted, createMissingKeys=true)
+    JDB.solveObjSetter(".CustomSkillsMenuv3.MenuData", jCustomMenuPreFormatted, createMissingKeys=true)
 
     JValue.cleanPool(poolName)
 endfunction
@@ -174,7 +163,7 @@ event SelectedMenu(string eventName, string strArg, float numArg, Form sender)
         MSMData = JValue.addToPool(JValue.readFromFile("data/interface/MetaSkillsMenu/MSMData.json"), "menuData")
         JDB.solveObjSetter(".CustomSkillsMenuv3.MenuData", MSMData, createMissingKeys=true)
     endif
-    
+
     ; get chosen skill object from config
     int modObject = JValue.addToPool(JMap.getObj(MSMData, strArg), "menuData")
 
