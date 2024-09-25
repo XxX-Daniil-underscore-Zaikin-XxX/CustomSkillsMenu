@@ -5,7 +5,7 @@
 This is an update/rework of [Osmosis Wrench](https://www.nexusmods.com/skyrimspecialedition/users/2801784)'s [Custom Skills Menu](https://www.nexusmods.com/skyrimspecialedition/mods/62423?tab=description) for compatibility with Custom Skills Framework v3.
 
 > [!IMPORTANT]
-> The [original mod](https://www.nexusmods.com/skyrimspecialedition/mods/62423) is hard requirement! Please support [Osmosis Wrench](https://www.nexusmods.com/skyrimspecialedition/users/2801784) too - this mod wouldn't be here if not for their hard work.
+> The [original mod](https://www.nexusmods.com/skyrimspecialedition/mods/62423) is a hard requirement! Please support [Osmosis Wrench](https://www.nexusmods.com/skyrimspecialedition/users/2801784) too - this mod wouldn't be here if not for their hard work.
 
 ## Basics
 
