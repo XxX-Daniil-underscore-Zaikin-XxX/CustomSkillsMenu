@@ -97,8 +97,7 @@ function load_data()
         ; grab object associated with key
         int fileobj = JValue.addToPool(jmap.getobj(jCustomMenuPreFormatted, filekey), filePoolName)
         string pluginName = jmap.getstr(fileobj, "plugin")
-        ;; oh my god why did I write this terrible code, it's jibberish
-        ; yeah it sure is, did you write it on your phone or something?
+
         Writelog("Loading skills from file: " + filekey)
         WriteLog("Using this to display menu: " + JMap.getStr(fileobj, "ShowMenu"))
         WriteLog("Hidden? " + JMap.getInt(fileobj, "hidden"))
@@ -175,6 +174,7 @@ event SelectedMenu(string eventName, string strArg, float numArg, Form sender)
         MSMData = JValue.addToPool(JValue.readFromFile("data/interface/MetaSkillsMenu/MSMData.json"), "menuData")
         JDB.solveObjSetter(".CustomSkillsMenuv3.MenuData", MSMData, createMissingKeys=true)
     endif
+    
     ; get chosen skill object from config
     int modObject = JValue.addToPool(JMap.getObj(MSMData, strArg), "menuData")
 
