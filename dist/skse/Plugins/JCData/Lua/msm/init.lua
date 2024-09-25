@@ -4,13 +4,13 @@ local msm = {}
 
 -- we receive our collection of every Custom Skill at once
 -- and we return a trimmed version with only what CSM needs
-function msm.truncate(collection)
+function msm.truncateV3(collection)
     local ret = JMap.object()
 
     for filePath, skillSet in pairs(collection) do
         --extract filename
         local fileName = filePath:match("^(.+)%.%w+")
-        local processedSkill = msm.processSkill(fileName, skillSet)
+        local processedSkill = msm.processSkillV3(fileName, skillSet)
 
         --sanity check
         if processedSkill ~= nil then
@@ -22,7 +22,7 @@ function msm.truncate(collection)
 end
 
 -- Trim and format CSF json into only everything that CSM needs
-function msm.processSkill(fileName, skillSet)
+function msm.processSkillV3(fileName, skillSet)
     local showMenu = skillSet["showMenu"]
 
     --sanity check
@@ -54,6 +54,63 @@ function msm.processSkill(fileName, skillSet)
     menuEntry["Disabled"] = 0
 
     return menuEntry
+end
+
+-- from the original CSM
+-- don't broke what ain't fix
+function msm.truncateV2(collection)
+    local ret = JMap.object()
+    local function trim(s)
+        -- from PiL2 20.4
+        return (s:gsub("^%s*(.-)%s*$", "%1"))
+    end
+    for x = 1, #collection do
+        local file = io.open(collection[x], "r")
+        if file == nil then
+            goto continue
+        end
+        local content = file:read "*a"
+        file:close()
+        local t = JMap.object()
+        for k, v in string.gmatch(content, "(%w+) =(.-\n)") do
+            t[k] = v
+            -- cleanup crap
+            t[k] = string.gsub(t[k], "\n", "")
+            t[k] = string.gsub(t[k], " \\ ", "")
+            t[k] = string.gsub(t[k], "\"", "")
+            t[k] = trim(t[k])
+        end
+        if t["Name"]and t["MSM_DoNotShow"] == nil then
+            local r = JMap.object()
+            r["filePath"] = collection[x]
+            r["Name"] = t["Name"]
+            r["Description"] = t["Description"]
+            if t["ShowMenuFile"] == nil or t["LevelFile"] == "" then
+                -- this will be the default action if on new CSF as ShowMenuFile is no longer needed.
+                if t["LevelFile"] == nil or t["LevelFile"] == "" then
+                    r["plugin"] = t["RatioFile"]
+                else
+                    r["plugin"] = t["LevelFile"]
+                end
+                r["ShowMenuForm"] = 0
+                r["CSFSKSE"] = 1
+                r["Disabled"] = 1
+            else
+                r["plugin"] = t["ShowMenuFile"]
+                r["ShowMenu"] = "__formData|"..t["ShowMenuFile"].."|"..t["ShowMenuId"]
+                r["CSFSKSE"] = 0
+                r["Disabled"] = 0
+            end
+            r["icon_loc"] = "data/interface/MetaSkillsMenu/" .. r["Name"] .. " " .. string.gsub(r["plugin"], ".esp", ".dds")
+            r["icon_exists"] = 0
+            r["hidden"] = 0
+            local fileName = collection[x]:match(".+%/(.+).txt")
+             -- construct formdata record
+            ret[fileName] = r
+        end
+        ::continue::
+    end
+    return ret
 end
 
 -- Replace new Name, Description, and icon_loc with original
@@ -137,8 +194,13 @@ function msm.transferToHidden(menus, hiddenOptions)
 end
 
 -- forced to use this helper because JContainers only allows one argument
+function msm.mergeMenuOptionsHelper(collection)
+    return msm.mergeMenuOptions(collection["original"], collection["new"])
+end
+
+-- forced to use this helper because JContainers only allows one argument
 function msm.loadCustomMenu(settings)
-    return msm.mergeMenuOptions(settings["original"], msm.truncate(settings["new"]))
+    return msm.mergeMenuOptions(settings["original"], msm.truncateV3(settings["new"]))
 end
 
 -- sets value from tableFrom to tableTo if key exists in tableFrom

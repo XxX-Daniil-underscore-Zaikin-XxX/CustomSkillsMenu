@@ -62,21 +62,32 @@ int function tryGetObjFromFile(string filePath, string poolName)
     endif
 EndFunction
 
+; run on game load
+; could be cleaned up and wrapped into loops, but I'm not sure if the comprehensibility trade-off is worth it
 function load_data()
     string poolName = "menuInfoPool"
     ; turn files to array of strings
-    int CSFFiles = JValue.addToPool(JValue.readFromDirectory("data/SKSE/Plugins/CustomSkills/", ".json"), poolName)
-    jvalue.writetofile(CSFFiles, "data/interface/MetaSkillsMenu/rawData.json")
+    int jCsfFilesV3 = JValue.addToPool(JValue.readFromDirectory("data/SKSE/Plugins/CustomSkills/", ".json"), poolName)
+    jvalue.writetofile(jCsfFilesV3, "data/interface/MetaSkillsMenu/rawData.json")
+
+    ; get contents of Custom Skills directory and process it
+    int jCsfFilesV2 = JValue.addToPool(JArray.objectWithStrings(JContainers.contentsOfDirectoryAtPath("data/NetScriptFramework/Plugins", ".txt")), poolName)
+    ;int jConfigsV2 = JValue.addToPool(JValue.evalLuaObj(jCsfFilesV2, "return msm.truncateV2(jobject)"), poolName)
 
     ; read saved data
     int hideData = tryGetObjFromFile("data/interface/MetaSkillsMenu/MSMHidden.json", poolName)
     int savedData = tryGetObjFromFile("data/interface/MetaSkillsMenu/MSMData.json", poolName)
 
-    ; pre-format our data
+    ; First we overwrite the CSF v3 .json data with MSMData.json
     int loadedConfigs = JValue.addToPool(JMap.object(), poolName)
     JMap.setObj(loadedConfigs, "original", savedData)
-    JMap.setObj(loadedConfigs, "new", CSFFiles)
-    int allConfigsTrimmed = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.loadCustomMenu(jobject)"), poolName)
+    JMap.setObj(loadedConfigs, "new", JValue.addToPool(JValue.evalLuaObj(jCsfFilesV3, "return msm.truncateV3(jobject)"), poolName))
+    int configsTrimmedV3 = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.mergeMenuOptionsHelper(jobject)"), poolName)
+
+    ; Then we overwrite the CSF v2 data with our combined data
+    JMap.setObj(loadedConfigs, "original", configsTrimmedV3)
+    Jmap.setObj(loadedConfigs, "new", JValue.addToPool(JValue.evalLuaObj(jCsfFilesV2, "return msm.truncateV2(jobject)"), poolName))
+    int allConfigsTrimmed = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.mergeMenuOptionsHelper(jobject)"), poolName)
 
     ; process hidden data also
     int jConfWithHidden = JValue.addToPool(JMap.object(), poolName)
