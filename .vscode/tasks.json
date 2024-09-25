@@ -4,11 +4,8 @@
     "tasks": [
         {
             "type": "pyro",
-            // path to your .ppj file
             "projectFile": "Source\\Scripts\\skyrimse.ppj",
-            // path to your Skyrim installation
             "gamePath": "${config:SKYRIM_PATH}",
-            // path to your Caprica compiler (you can find the most up-to-date version here: https://github.com/Orvid/Caprica/actions/runs/9566782007)
             "compilerPath": "${config:CAPRICA_PATH}",
             "problemMatcher": [
                 "$PapyrusCompiler"
@@ -23,9 +20,8 @@
                 "clear": false,
                 "group": "build"
             },
-            "group": "build",
+            "group": "build"
         },
-        // convert YAML files into the ESP
         {
             "label": "Spriggit: Deserialize project",
             "type": "shell",
@@ -41,7 +37,6 @@
                 "group": "build"
             }
         },
-        // convert the ESP into YAML files
         {
             "label": "Spriggit: Serialize project",
             "type": "shell",
@@ -56,30 +51,44 @@
                 "clear": false,
                 "group": "build"
             },
-            "dependsOn": ["Lint ESP"]
+            "dependsOn": [
+                "Lint ESP"
+            ]
         },
-        // lint ESP using Spriggit
         {
             "label": "Lint ESP",
             "type": "shell",
             "command": "for esp in $(echo ${config:ESP_NAMES} | tr ',' '\n'); do ${config:SPRIGGIT_PATH} sort-script-properties -i \"$esp.esp\" -o \"$esp.esp\" --GameRelease SkyrimSE ; done",
-            "group":"none"
+            "group": "none"
         },
-        // Deserialize ESP and compile Papyrus
         {
             "label": "Build All",
-            "dependsOn": ["pyro: Compile Project (skyrimse.ppj)"],
+            "dependsOn": [
+                "pyro: Compile Project (skyrimse.ppj)"
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             }
         },
-        // Compile papyrus (to catch compile errors), serialize esp
+        {
+            "label": "Copy files into dist",
+            "type": "shell",
+            "command": "cp -r -u ./skse/ dist/ && cp -r -u ./interface/ dist/",
+            "problemMatcher": []
+        },
+        {
+            "label": "Copy files out of dist",
+            "type": "shell",
+            "command": "cp -r -u dist/* .",
+            "problemMatcher": []
+        },
         {
             "label": "Prepare Sources",
-            "dependsOn": ["pyro: Compile Project (skyrimse.ppj)"]
+            "dependsOn": [
+                "pyro: Compile Project (skyrimse.ppj)"
+            ]
         },
-        // Run scripts. We do this every time we serialize.
         {
             "label": "Run Mutagen scripts",
             "type": "shell",
