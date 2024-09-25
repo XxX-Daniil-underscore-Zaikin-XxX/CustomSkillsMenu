@@ -108,7 +108,7 @@ function load_data()
             string skillName = JMap.getStr(fileobj, "Name")
             writelog("FAILED TO FIND MOD FOR " + skillName + ", MISSING ESP: " + pluginName, 0)
             writelog("Disabling skillset " + skillName, 0)
-            JMap.setInt(fileobj, "disabled", 1)
+            JMap.setInt(fileobj, "Disabled", 1)
         endif
 
         ; go to next filekey
