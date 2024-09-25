@@ -188,7 +188,7 @@ jobs:
           mkdir "${{ github.workspace }}/to-pack/100 Optional - Example Patch"
           mkdir "${{ github.workspace }}/to-pack/200 Optional - Script Sources"
           cp -a "Scripts" "${{ github.workspace }}/to-pack/000 Required - Core Files/Scripts"
-          cp -a "dist/*" "${{ github.workspace }}/to-pack/000 Required - Core Files/"
+          cp -a "dist/." "${{ github.workspace }}/to-pack/000 Required - Core Files/"
           cp -a "Source" "${{ github.workspace }}/to-pack/200 Optional - Script Sources/Source"
           cp -a "FOMOD Files/fomod" "${{ github.workspace }}/to-pack/fomod"
           cp -a "FOMOD Files/images" "${{ github.workspace }}/to-pack/images"

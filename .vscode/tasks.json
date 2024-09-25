@@ -64,7 +64,8 @@
         {
             "label": "Build All",
             "dependsOn": [
-                "pyro: Compile Project (skyrimse.ppj)"
+                "pyro: Compile Project (skyrimse.ppj)",
+                "Copy files out of dist"
             ],
             "group": {
                 "kind": "build",
@@ -86,7 +87,8 @@
         {
             "label": "Prepare Sources",
             "dependsOn": [
-                "pyro: Compile Project (skyrimse.ppj)"
+                "pyro: Compile Project (skyrimse.ppj)",
+                "Copy files into dist"
             ]
         },
         {
