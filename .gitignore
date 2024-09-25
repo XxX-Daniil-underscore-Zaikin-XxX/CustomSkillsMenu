@@ -3,6 +3,11 @@ SSEEdit*
 *.esp
 *.pex
 /Scripts
-*.ppj
 settings.json
 .secrets
+interface
+jc
+testing
+Domains
+InternalLuaScripts
+/skse

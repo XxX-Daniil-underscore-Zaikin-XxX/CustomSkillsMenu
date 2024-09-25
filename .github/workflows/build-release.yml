@@ -30,7 +30,9 @@ on:
 env:
   # If you must compile more .esp files, add them in the following format
   ESP_NAMES: ("metaSkillMenu")
-  PROJECT_NAME: CustomSkillMenu
+  # The name of the game you're making the mod for - identical to the game's folder
+  GAME: "Skyrim Special Edition"
+  PROJECT_NAME: CustomSkillsMenuCSFv3
   # Do not edit
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
@@ -42,25 +44,37 @@ jobs:
       date: ${{ steps.get-date.outputs.time }}
       version: ${{ steps.get-version.outputs.VERSION }}
       release-name: ${{ steps.set-release.outputs.rel-name }}
+      trimmed-release-name: ${{ steps.set-trimmed-release.outputs.trim-rel-name }}
     steps:
+
       - uses: actions/checkout@v4
+
       - name: Get Date
         id: get-date
         uses: Kaven-Universe/github-action-current-date-time@v1
         with:
           format: "YYYY-MM-DD"
+
       - name: Get short hash
         id: get-hash
         shell: bash
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        
       - name: Get version
         id: get-version
         shell: bash
         run: echo "VERSION=${{ inputs.version || (github.event_name == 'push' || github.event_name == 'pull_request') && format('{0}.{1}', env.BRANCH_NAME, steps.get-hash.outputs.sha_short) || format('nightly-{0}', steps.get-date.outputs.time) }}" >> "$GITHUB_OUTPUT"
+
       - name: Set release name
         id: set-release
         shell: bash
         run: echo "rel-name=${{ format('{0}-{1}', env.PROJECT_NAME, steps.get-version.outputs.VERSION)}}" >> "$GITHUB_OUTPUT"
+
+      - name: Set trimmed release name
+        id: set-trimmed-release
+        shell: bash
+        run: echo "trim-rel-name=$(echo ${{ steps.set-release.outputs.rel-name }} | tr -d /)" >> "$GITHUB_OUTPUT"
+
   check-changes:
     name: Check for recent changes
     if: ${{ github.event_name != 'workflow_dispatch' }}
@@ -80,63 +94,7 @@ jobs:
         id: should_run_weekly
         shell: bash
         run: echo "should_run=true" >> "$GITHUB_OUTPUT"
-  build-plugin:
-    name: Build ESP from Spriggit files
-    needs: check-changes
-    if: ${{ needs.check-changes.outputs.should_run >= 1 || (github.event_name == 'workflow_dispatch' && always()) }}
-    permissions: write-all
-    runs-on: ubuntu-latest
-    steps:
-      - name: Output Inputs
-        run: |
-          echo "GitHub Event Inputs: ${{ toJSON(github.event.inputs) }}"
-          echo "Inputs: ${{ toJSON(inputs) }}"
 
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Copy to Pack Folder
-        shell: bash
-        run: mkdir ${{ github.workspace }}/to-pack
-
-      - name: Cache Spriggit
-        id: cache-spriggit
-        uses: actions/cache@v4
-        with:
-          path: |
-            .github/spriggit
-          key: ${{ runner.os }}-spriggit
-      
-      - name: Fetch spriggit
-        if: steps.cache-spriggit.outputs.cache-hit != 'true'
-        shell: bash
-        run: gh release download -O .github/spriggit.zip -p 'SpriggitLinuxCLI.zip' -R Mutagen-Modding/Spriggit ${{ inputs.spriggit_tool_version }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-          
-      - name: Extract Spriggit Zip
-        if: steps.cache-spriggit.outputs.cache-hit != 'true'
-        shell: bash
-        run: 7z x .github/spriggit.zip -o.github/spriggit
-
-      - name: Fix spriggit permission
-        shell: bash
-        run: chmod +x .github/spriggit/Spriggit.CLI
-
-      - name: Run spriggit
-        shell: bash
-        run: |
-          esps=${{ env.ESP_NAMES }}
-          for esp in ${esps[@]}
-          do
-            .github/spriggit/Spriggit.CLI deserialize --InputPath "$esp" --OutputPath "${{ github.workspace }}/to-pack/$esp.esp"
-          done
-
-      - name: Upload plugin
-        uses: actions/upload-artifact@v4
-        with:
-            name: plugin
-            path: ${{ github.workspace }}/to-pack/*
   compile-scripts:
     name: Compile Papyrus scripts
     needs: check-changes
@@ -148,14 +106,12 @@ jobs:
           with:
             sparse-checkout: Source/Scripts
         
-        # If you add more Papyrus sources, add them to path
         - name: Cache Script Sources
           id: cache-ss
           uses: actions/cache@v4
           with:
             path: |
-              .github/Papyrus
-            # .github/AnotherPapyrusRepo
+              .github/Pyro/remote
             key: script-sources-clean
 
         - name: Cache Complier
@@ -166,92 +122,55 @@ jobs:
               .github/Caprica
             key: ${{ runner.os }}-papyrus-compiler
 
-        - name: Fetch Caprica 0.3.0
+        - name: Cache Pyro
+          id: cache-pyro
+          uses: actions/cache@v4
+          with:
+            path: |
+              .github/Pyro
+            key: ${{ runner.os }}-pyro
+
+        - name: Fetch Caprica Prerelease
           if: steps.cache-com.outputs.cache-hit != 'true'
           shell: bash
-          run: gh release download -O .github/Caprica.7z -p '*.7z' -R Orvid/Caprica v0.3.0
+          # temporarily download Caprica from run instead of release
+          run: gh run download 10979332233 -R Orvid/Caprica
           env:
             GH_TOKEN: ${{ github.token }}
 
-        - name: Extract Caprica EXE file
-          if: steps.cache-com.outputs.cache-hit != 'true'
+        - name: Fetch latest Pyro
+          if: steps.cache-pyro.outputs.cache-hit != 'true'
           shell: bash
-          run: 7z x .github/Caprica.7z -o.github/Caprica
+          # temporarily download Pyro from run instead of release
+          run: |
+            gh run download 10850094629 -R XxX-Daniil-underscore-Zaikin-XxX/pyro
+            mv pyro* Pyro
+            ls -aR
+          env:
+            GH_TOKEN: ${{ github.token }}
 
-        # Repeat this process for every new papyrus source
-        - name: Checkout Papyrus Sources
-          if: steps.cache-ss.outputs.cache-hit != 'true'
+        - name: Run Pyro
           shell: bash
           run: |
-            cd .github
-            mkdir Papyrus
-            cd Papyrus
-            git init
-            git remote add origin https://github.com/IHateMyKite/PAPYRUS.git
-            git sparse-checkout set --no-cone 'SRC' 'SRC_SKYUI'
-            git fetch --depth=1 origin main
-            git checkout main
-            rm -rf .git
+            mkdir -p "dummyGame/${{ env.GAME }}"
+            Pyro/pyro.exe --compiler-path "${{ github.workspace}}/Caprica/Caprica.exe" --access-token ${{ github.token }} --game-path "${{ github.workspace}}/dummyGame/${{ env.GAME }}" "${{ github.workspace}}/Source/Scripts/skyrimse.ppj"
 
-        # Additional papyrus downloads would appear as follows:
-
-      # - name: Checkout More Papyrus Sources
-      #   if: steps.cache-ss.outputs.cache-hit != 'true'
-      #   shell: bash
-      #   run: |
-      #     cd .github
-#CHANGED -> mkdir AnotherPapyrusRepo
-#CHANGED -> cd AnotherPapyrusRepo
-      #     git init
-#CHANGED -> git remote add origin https://github.com/AnotherPapyrusRepo.git
-#CHANGED -> git sparse-checkout set --no-cone 'Path/To/Papyrus/Files'
-      #     git fetch --depth=1 origin main
-      #     git checkout main
-      #     rm -rf .git
-        
-        - name: Checkout TESV Flags File
-          if: steps.cache-ss.outputs.cache-hit != 'true'
-          shell: bash
-          run: |
-            cd .github
-            mkdir temp
-            cd temp
-            git init
-            git remote add origin https://github.com/Rukan/Grimy-Skyrim-Papyrus-Source.git
-            git sparse-checkout set --no-cone 'TESV_Papyrus_Flags.flg'
-            git fetch --depth=1 origin master
-            git checkout master
-            rm -rf .git
-            mv TESV_Papyrus_Flags.flg ../Papyrus/SRC/TESV_Papyrus_Flags.flg
-            cd ..
-            rm -r temp
-
-        # If you add more Papyrus sources, change the --import to include their folders
-        - name: Run Caprica
-          shell: bash
-          run: .github/Caprica/Caprica.exe --game skyrim --import ".github/Papyrus/SRC;.github/Papyrus/SRC_SKYUI" --output "Scripts" --flags="TESV_Papyrus_Flags.flg" "Source/Scripts" -R -q
-        # As an example:
-        # run: .github/Caprica/Caprica.exe --game skyrim --import ".github/Papyrus/SRC;.github/AnotherPapyrusRepo/Path/To/Papyrus/Files" --output "Scripts" --flags="TESV_Papyrus_Flags.flg" "Source/Scripts" -R -q
         - name: Upload Output
           uses: actions/upload-artifact@v4
           with: 
             name: compiled-scripts
             path: |
               Scripts/
+
   package-mod:
     name: Package all necessary files
     runs-on: ubuntu-latest
-    needs: [check-changes, build-plugin, compile-scripts, get-version]
+    needs: [check-changes, compile-scripts, get-version]
     if: ${{ needs.check-changes.outputs.should_run >= 1 || (github.event_name == 'workflow_dispatch' && always()) }}
     permissions: write-all
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
-      - name: Download Compiled Plugin
-        uses: actions/download-artifact@v4
-        with:
-          name: plugin
       
       - name: Download Compiled Scripts
         uses: actions/download-artifact@v4
@@ -268,9 +187,8 @@ jobs:
           mkdir "${{ github.workspace }}/to-pack/000 Required - Core Files"
           mkdir "${{ github.workspace }}/to-pack/100 Optional - Example Patch"
           mkdir "${{ github.workspace }}/to-pack/200 Optional - Script Sources"
-          cp "${esps[0]}.esp" "${{ github.workspace }}/to-pack/000 Required - Core Files/${esps[0]}.esp"
-          cp "${esps[1]}.esp" "${{ github.workspace }}/to-pack/100 Optional - Example Patch/${esps[1]}.esp"
           cp -a "Scripts" "${{ github.workspace }}/to-pack/000 Required - Core Files/Scripts"
+          cp -a "dist/." "${{ github.workspace }}/to-pack/000 Required - Core Files/"
           cp -a "Source" "${{ github.workspace }}/to-pack/200 Optional - Script Sources/Source"
           cp -a "FOMOD Files/fomod" "${{ github.workspace }}/to-pack/fomod"
           cp -a "FOMOD Files/images" "${{ github.workspace }}/to-pack/images"
@@ -284,7 +202,7 @@ jobs:
       - name: Upload Output
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ needs.get-version.outputs.release-name }}
+          name: ${{ needs.get-version.outputs.trimmed-release-name }}
           path: to-pack/*
 
       - name: Remove temporary artifacts
@@ -299,7 +217,10 @@ jobs:
     permissions: write-all
     needs: [check-changes, package-mod, get-version]
     if: >
-        github.event_name == 'schedule' ||
+        (
+          github.event_name == 'schedule' &&
+          needs.check-changes.outputs.should_run >= 1
+        ) ||
         (
           inputs.publish-release == true && 
           (
@@ -314,18 +235,28 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
+      - shell: bash
+        run: |
+          echo "VERSION=${{ needs.get-version.outputs.release-name }}" >> $GITHUB_ENV
+          echo "TRIMMED_VERSION=${{ needs.get-version.outputs.trimmed-release-name }}" >> $GITHUB_ENV
   
       - name: Download release artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.get-version.outputs.release-name }}
+          path: ${{ env.TRIMMED_VERSION }}
+          name: ${{ env.TRIMMED_VERSION }}
 
       - name: Delete existing release
         uses: dev-drprasad/delete-tag-and-release@v1.0
         with:
-          tag_name: ${{ needs.get-version.outputs.version }}
+          tag_name: ${{ env.VERSION }}
           github_token: ${{ github.token }}
           delete_release: true
+
+      - name: Zip release
+        shell: bash
+        run: "zip -r ${{ env.TRIMMED_VERSION }}.zip ${{ env.TRIMMED_VERSION }}"
       
       - name: Create Release
         id: create_release
@@ -334,7 +265,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           allowUpdates: true
-          name: ${{ needs.get-version.outputs.version }}
+          name: ${{ env.VERSION }}
           draft: false
           body: 'Latest release of ${{ env.PROJECT_NAME }}'
           tag: ${{ needs.get-version.outputs.version }}
@@ -343,9 +274,9 @@ jobs:
           removeArtifacts: true
           replacesArtifacts: true
           artifactErrorsFailBuild: true
-          artifacts: ${{ needs.get-version.outputs.release-name }}.zip
+          artifacts: ${{ env.TRIMMED_VERSION }}.zip
 
       - name: Remove temporary artifacts
         uses: geekyeggo/delete-artifact@v2
         with:
-          name: ${{ needs.get-version.outputs.release-name }}
+          name: ${{ env.TRIMMED_VERSION }}
