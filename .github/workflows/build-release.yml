@@ -94,63 +94,7 @@ jobs:
         id: should_run_weekly
         shell: bash
         run: echo "should_run=true" >> "$GITHUB_OUTPUT"
-  build-plugin:
-    name: Build ESP from Spriggit files
-    needs: check-changes
-    if: ${{ needs.check-changes.outputs.should_run >= 1 || (github.event_name == 'workflow_dispatch' && always()) }}
-    permissions: write-all
-    runs-on: ubuntu-latest
-    steps:
-      - name: Output Inputs
-        run: |
-          echo "GitHub Event Inputs: ${{ toJSON(github.event.inputs) }}"
-          echo "Inputs: ${{ toJSON(inputs) }}"
 
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Copy to Pack Folder
-        shell: bash
-        run: mkdir ${{ github.workspace }}/to-pack
-
-      - name: Cache Spriggit
-        id: cache-spriggit
-        uses: actions/cache@v4
-        with:
-          path: |
-            .github/spriggit
-          key: ${{ runner.os }}-spriggit
-      
-      - name: Fetch spriggit
-        if: steps.cache-spriggit.outputs.cache-hit != 'true'
-        shell: bash
-        run: gh release download -O .github/spriggit.zip -p 'SpriggitLinuxCLI.zip' -R Mutagen-Modding/Spriggit ${{ inputs.spriggit_tool_version }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-          
-      - name: Extract Spriggit Zip
-        if: steps.cache-spriggit.outputs.cache-hit != 'true'
-        shell: bash
-        run: 7z x .github/spriggit.zip -o.github/spriggit
-
-      - name: Fix spriggit permission
-        shell: bash
-        run: chmod +x .github/spriggit/Spriggit.CLI
-
-      - name: Run spriggit
-        shell: bash
-        run: |
-          esps=${{ env.ESP_NAMES }}
-          for esp in ${esps[@]}
-          do
-            .github/spriggit/Spriggit.CLI deserialize --InputPath "$esp" --OutputPath "${{ github.workspace }}/to-pack/$esp.esp"
-          done
-
-      - name: Upload plugin
-        uses: actions/upload-artifact@v4
-        with:
-            name: plugin
-            path: ${{ github.workspace }}/to-pack/*
   compile-scripts:
     name: Compile Papyrus scripts
     needs: check-changes
@@ -217,20 +161,16 @@ jobs:
             name: compiled-scripts
             path: |
               Scripts/
+
   package-mod:
     name: Package all necessary files
     runs-on: ubuntu-latest
-    needs: [check-changes, build-plugin, compile-scripts, get-version]
+    needs: [check-changes, compile-scripts, get-version]
     if: ${{ needs.check-changes.outputs.should_run >= 1 || (github.event_name == 'workflow_dispatch' && always()) }}
     permissions: write-all
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
-      - name: Download Compiled Plugin
-        uses: actions/download-artifact@v4
-        with:
-          name: plugin
       
       - name: Download Compiled Scripts
         uses: actions/download-artifact@v4
@@ -247,9 +187,8 @@ jobs:
           mkdir "${{ github.workspace }}/to-pack/000 Required - Core Files"
           mkdir "${{ github.workspace }}/to-pack/100 Optional - Example Patch"
           mkdir "${{ github.workspace }}/to-pack/200 Optional - Script Sources"
-          cp "${esps[0]}.esp" "${{ github.workspace }}/to-pack/000 Required - Core Files/${esps[0]}.esp"
           cp -a "Scripts" "${{ github.workspace }}/to-pack/000 Required - Core Files/Scripts"
-          cp -a "dist/interface" "${{ github.workspace }}/to-pack/000 Required - Core Files/interface"
+          cp -a "dist/." "${{ github.workspace }}/to-pack/000 Required - Core Files/"
           cp -a "Source" "${{ github.workspace }}/to-pack/200 Optional - Script Sources/Source"
           cp -a "FOMOD Files/fomod" "${{ github.workspace }}/to-pack/fomod"
           cp -a "FOMOD Files/images" "${{ github.workspace }}/to-pack/images"
