@@ -82,29 +82,31 @@ function msm.truncateV2(collection)
         end
         if t["Name"]and t["MSM_DoNotShow"] == nil then
             local r = JMap.object()
-            r["test"] = collection[x]
+            r["filePath"] = collection[x]
             r["Name"] = t["Name"]
             r["Description"] = t["Description"]
-            r["Skydome"] = t["Skydome"]
             if t["ShowMenuFile"] == nil or t["LevelFile"] == "" then
                 -- this will be the default action if on new CSF as ShowMenuFile is no longer needed.
                 if t["LevelFile"] == nil or t["LevelFile"] == "" then
-                    r["ShowMenuFile"] = t["RatioFile"]
+                    r["plugin"] = t["RatioFile"]
                 else
-                    r["ShowMenuFile"] = t["LevelFile"]
+                    r["plugin"] = t["LevelFile"]
                 end
                 r["ShowMenuForm"] = 0
                 r["CSFSKSE"] = 1
+                r["Disabled"] = 1
             else
-                r["ShowMenuFile"] = t["ShowMenuFile"]
-                r["ShowMenuForm"] = "__formData|"..t["ShowMenuFile"].."|"..t["ShowMenuId"]
+                r["plugin"] = t["ShowMenuFile"]
+                r["ShowMenu"] = "__formData|"..t["ShowMenuFile"].."|"..t["ShowMenuId"]
                 r["CSFSKSE"] = 0
+                r["Disabled"] = 0
             end
-            r["icon_loc"] = "data/interface/MetaSkillsMenu/" .. r["Name"] .. " " .. string.gsub(r["ShowMenuFile"], ".esp", ".dds")
+            r["icon_loc"] = "data/interface/MetaSkillsMenu/" .. r["Name"] .. " " .. string.gsub(r["plugin"], ".esp", ".dds")
             r["icon_exists"] = 0
             r["hidden"] = 0
+            local fileName = collection[x]:match(".+%/(.+).txt")
              -- construct formdata record
-            ret[collection[x]] = r
+            ret[fileName] = r
         end
         ::continue::
     end
@@ -189,6 +191,11 @@ function msm.transferToHidden(menus, hiddenOptions)
         end
     end
     return hiddenOptions
+end
+
+-- forced to use this helper because JContainers only allows one argument
+function msm.mergeMenuOptionsHelper(collection)
+    return msm.mergeMenuOptions(collection["original"], collection["new"])
 end
 
 -- forced to use this helper because JContainers only allows one argument
