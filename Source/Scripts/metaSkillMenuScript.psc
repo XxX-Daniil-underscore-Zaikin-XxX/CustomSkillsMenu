@@ -69,10 +69,11 @@ function load_data()
     ; turn files to array of strings
     int jCsfFilesV3 = JValue.addToPool(JValue.readFromDirectory("data/SKSE/Plugins/CustomSkills/", ".json"), poolName)
     jvalue.writetofile(jCsfFilesV3, "data/interface/MetaSkillsMenu/rawData.json")
+    int jConfigsV3 = JValue.addToPool(JValue.evalLuaObj(jCsfFilesV3, "return msm.truncateV3(jobject)"), poolName)
 
     ; get contents of Custom Skills directory and process it
     int jCsfFilesV2 = JValue.addToPool(JArray.objectWithStrings(JContainers.contentsOfDirectoryAtPath("data/NetScriptFramework/Plugins", ".txt")), poolName)
-    ;int jConfigsV2 = JValue.addToPool(JValue.evalLuaObj(jCsfFilesV2, "return msm.truncateV2(jobject)"), poolName)
+    int jConfigsV2 = JValue.addToPool(JValue.evalLuaObj(jCsfFilesV2, "return msm.truncateV2(jobject)"), poolName)
 
     ; read saved data
     int hideData = tryGetObjFromFile("data/interface/MetaSkillsMenu/MSMHidden.json", poolName)
@@ -81,12 +82,12 @@ function load_data()
     ; First we overwrite the CSF v3 .json data with MSMData.json
     int loadedConfigs = JValue.addToPool(JMap.object(), poolName)
     JMap.setObj(loadedConfigs, "original", savedData)
-    JMap.setObj(loadedConfigs, "new", JValue.addToPool(JValue.evalLuaObj(jCsfFilesV3, "return msm.truncateV3(jobject)"), poolName))
+    JMap.setObj(loadedConfigs, "new", jConfigsV3)
     int configsTrimmedV3 = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.mergeMenuOptionsHelper(jobject)"), poolName)
 
     ; Then we overwrite the CSF v2 data with our combined data
     JMap.setObj(loadedConfigs, "original", configsTrimmedV3)
-    Jmap.setObj(loadedConfigs, "new", JValue.addToPool(JValue.evalLuaObj(jCsfFilesV2, "return msm.truncateV2(jobject)"), poolName))
+    Jmap.setObj(loadedConfigs, "new", jConfigsV2)
     int allConfigsTrimmed = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.mergeMenuOptionsHelper(jobject)"), poolName)
 
     ; process hidden data also
