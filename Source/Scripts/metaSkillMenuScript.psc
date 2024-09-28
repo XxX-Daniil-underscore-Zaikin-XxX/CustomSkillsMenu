@@ -109,7 +109,13 @@ function load_data()
         string pluginName = jmap.getstr(fileobj, "plugin")
 
         Writelog("Loading skills from file: " + filekey)
-        WriteLog("Using this to display menu: " + JMap.getStr(fileobj, "ShowMenu"))
+        bool isCsfV2 = JMap.getInt(fileobj, "CSFv2") as bool
+        if (isCsfV2)
+            WriteLog("CSF v2 skill. Will call CSF with file ID (" + filekey + ")")
+        else
+            WriteLog("Using this to display menu: " + JMap.getStr(fileobj, "ShowMenu"))
+        endif
+        
         WriteLog("Hidden? " + JMap.getInt(fileobj, "hidden"))
         if (game.IsPluginInstalled(pluginName))
             ; if at least one is unhidden, we set it to true
@@ -179,8 +185,15 @@ event SelectedMenu(string eventName, string strArg, float numArg, Form sender)
     ; get chosen skill object from config
     int modObject = JValue.addToPool(JMap.getObj(MSMData, strArg), "menuData")
 
-    GlobalVariable showMenuVar = JString.decodeFormStringToForm(JMap.getStr(modObject, "ShowMenu")) as GlobalVariable
-    showMenuVar.Mod(1.0)
+    bool isCsfV2 = JMap.getInt(modObject, "CSFv2")
+
+    if (isCsfV2)
+        CustomSkills.OpenCustomSkillMenu(strArg)
+    else
+        GlobalVariable showMenuVar = JString.decodeFormStringToForm(JMap.getStr(modObject, "ShowMenu")) as GlobalVariable
+        showMenuVar.Mod(1.0)
+    endif
+    
     UI.CloseCustomMenu()
     JValue.cleanPool("menuData")
 endEvent
