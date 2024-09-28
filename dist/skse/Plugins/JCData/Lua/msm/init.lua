@@ -50,6 +50,8 @@ function msm.processSkillV3(fileName, skillSet)
             string.gsub(plugin, ".esp", ".dds")
     menuEntry["icon_exists"] = 0
     menuEntry["plugin"] = plugin
+    -- CSFv2 skills can have a different entry point
+    menuEntry["CSFv2"] = 0
     -- enable it by default; we disable it in Papyrus
     menuEntry["Disabled"] = 0
 
@@ -86,27 +88,26 @@ function msm.truncateV2(collection)
             r["Name"] = t["Name"]
             r["Description"] = t["Description"]
             if t["ShowMenuFile"] == nil or t["LevelFile"] == "" then
-                -- this will be the default action if on new CSF as ShowMenuFile is no longer needed.
+                -- this will be the default action if on CSFv2 as ShowMenuFile is not needed
                 if t["LevelFile"] == nil or t["LevelFile"] == "" then
                     r["plugin"] = t["RatioFile"]
                 else
                     r["plugin"] = t["LevelFile"]
                 end
                 r["ShowMenuForm"] = 0
-                r["CSFSKSE"] = 1
-                r["Disabled"] = 1
+                r["CSFv2"] = 1
             else
                 r["plugin"] = t["ShowMenuFile"]
                 r["ShowMenu"] = "__formData|"..t["ShowMenuFile"].."|"..t["ShowMenuId"]
-                r["CSFSKSE"] = 0
-                r["Disabled"] = 0
+                r["CSFv2"] = 0
             end
             r["icon_loc"] = "data/interface/MetaSkillsMenu/" .. r["Name"] .. " " .. string.gsub(r["plugin"], ".esp", ".dds")
             r["icon_exists"] = 0
             r["hidden"] = 0
-            local fileName = collection[x]:match(".+%/(.+).txt")
+            r["Disabled"] = 0
+            local skillId = collection[x]:gsub(".+%/(.-)%.(.-)%.(.-)%.txt", "%2")
              -- construct formdata record
-            ret[fileName] = r
+            ret[skillId] = r
         end
         ::continue::
     end
