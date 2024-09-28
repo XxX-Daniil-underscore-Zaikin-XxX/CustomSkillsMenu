@@ -99,19 +99,20 @@ function load_data()
     int jCustomMenuPreFormatted = JValue.addToPool(JMap.getObj(jHiddenReturn, "menus"), poolName)
 
     ; start at the beginning
-    string filekey = jmap.nextkey(jCustomMenuPreFormatted)
+    string skillId = jmap.nextkey(jCustomMenuPreFormatted)
     ; WARNING
     ; We only load skill groups with a `ShowMenu`
-    while filekey
+    while skillId
         string filePoolName = "iterateFilePool"
         ; grab object associated with key
-        int fileobj = JValue.addToPool(jmap.getobj(jCustomMenuPreFormatted, filekey), filePoolName)
+        int fileobj = JValue.addToPool(jmap.getobj(jCustomMenuPreFormatted, skillId), filePoolName)
         string pluginName = jmap.getstr(fileobj, "plugin")
+        string showMenu = JMap.getStr(fileobj, "ShowMenu")
 
-        Writelog("Loading skills from file: " + filekey)
-        bool isCsfV2 = JMap.getInt(fileobj, "CSFv2") as bool
-        if (isCsfV2)
-            WriteLog("CSF v2 skill. Will call CSF with file ID (" + filekey + ")")
+        Writelog("Loading skills from file: " + skillId)
+        ;bool isCsfV2 = JMap.getInt(fileobj, "CSFv2") as bool
+        if (showMenu == "")
+            WriteLog("Legacy or legacy-style skill. Will call CSF with skill ID (" + skillId + ")")
         else
             WriteLog("Using this to display menu: " + JMap.getStr(fileobj, "ShowMenu"))
         endif
@@ -129,8 +130,8 @@ function load_data()
             JMap.setInt(fileobj, "Disabled", 1)
         endif
 
-        ; go to next filekey
-        filekey = jmap.nextkey(jCustomMenuPreFormatted, filekey)
+        ; go to next skillId
+        skillId = jmap.nextkey(jCustomMenuPreFormatted, skillId)
         JValue.cleanPool(filePoolName)
     endwhile
 
@@ -185,12 +186,13 @@ event SelectedMenu(string eventName, string strArg, float numArg, Form sender)
     ; get chosen skill object from config
     int modObject = JValue.addToPool(JMap.getObj(MSMData, strArg), "menuData")
 
-    bool isCsfV2 = JMap.getInt(modObject, "CSFv2")
+    ;bool isCsfV2 = JMap.getInt(modObject, "CSFv2")
+    string showMenu = JMap.getStr(modObject, "ShowMenu")
 
-    if (isCsfV2)
+    if (showMenu == "")
         CustomSkills.OpenCustomSkillMenu(strArg)
     else
-        GlobalVariable showMenuVar = JString.decodeFormStringToForm(JMap.getStr(modObject, "ShowMenu")) as GlobalVariable
+        GlobalVariable showMenuVar = JString.decodeFormStringToForm(showMenu) as GlobalVariable
         showMenuVar.Mod(1.0)
     endif
     
