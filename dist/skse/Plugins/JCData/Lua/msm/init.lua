@@ -9,49 +9,77 @@ function msm.truncateV3(collection)
 
     for filePath, skillSet in pairs(collection) do
         --extract filename
-        local fileName = filePath:match("^(.+)%.%w+")
-        local processedSkill = msm.processSkillV3(fileName, skillSet)
 
-        --sanity check
-        if processedSkill ~= nil then
-            ret[fileName] = processedSkill
+        local showMenu = skillSet["showMenu"]
+        local plugin = ""
+        -- Some skills are called by their ID instead of showMenu (bad, bad, bad!)
+        if showMenu == nil then
+            -- search for the plugin via other global vars
+            local globalVar = ""
+            if skillSet["debugReload"] ~= nil then
+                globalVar = skillSet["debugReload"]
+            elseif skillSet["perkPoints"] ~= nil then
+                globalVar = skillSet["perkPoints"]
+            end
+            -- if we don't find it, we skip the skill
+            if globalVar == nil then
+                goto continue
+            end
+            plugin = globalVar:match("^(.-)|")
+            local skills = skillSet["skills"]
+            -- iterate through skills, add each one as separate Skill Menu
+            for i=1, #skills do
+                local skill = skills[i]
+                local skillId = skill["id"]
+                local processedSkill = msm.processSkillV3(skillId, plugin, 0)
+                -- sanity check
+                if processedSkill ~= nil then
+                    ret[skillId] = processedSkill
+                end
+            end
+        else
+            -- set our ID to the fileName
+            local skillId = filePath:match("^(.+)%.%w+")
+            -- extract plugin and formid from CSF string
+            plugin = showMenu:match("^(.-)|")
+            local showMenuId = showMenu:match(".-|(.+)")
+            -- format formid
+            if showMenuId:find("0x") == nil then
+                showMenuId = "0x" .. showMenuId
+            end
+            -- process entire skill tree into one CSM selection
+            local processedSkill = msm.processSkillV3(skillId, plugin, showMenuId)
+            --sanity check
+            if processedSkill ~= nil then
+                ret[skillId] = processedSkill
+            end
         end
+        ::continue::
     end
 
     return ret
 end
 
 -- Trim and format CSF json into only everything that CSM needs
-function msm.processSkillV3(fileName, skillSet)
-    local showMenu = skillSet["showMenu"]
-
+function msm.processSkillV3(skillId, plugin, showMenuId)
     --sanity check
-    if fileName == nil or showMenu == nil or showMenu == "" then
+    if skillId == nil then
         return nil
     end
     local menuEntry = JMap.object()
-
-    --extract plugin from form
-    local plugin = showMenu:match("^(.-)|")
-
-    -- standardize hex format
-    local isHexFormat = showMenu:find("%|0x")
-    if isHexFormat == nil then
-        showMenu = showMenu:gsub("%|(%w+)", "%|0x%1")
+    -- process showMenu if it's there
+    if showMenuId ~= 0 then
+        menuEntry["ShowMenu"] = "__formData|" .. plugin .. "|" .. showMenuId
     end
-
     -- generate CSM data
-    menuEntry["Name"] = fileName
-    menuEntry["Description"] = "Skills belonging to " .. fileName
-    menuEntry["ShowMenu"] = "__formData|" .. showMenu
+    menuEntry["Name"] = skillId
+    menuEntry["Description"] = "Skills belonging to " .. skillId
     menuEntry["icon_loc"] = "data/interface/MetaSkillsMenu/" ..
-            fileName ..
+            skillId ..
             " " ..
             string.gsub(plugin, ".esp", ".dds")
     menuEntry["icon_exists"] = 0
     menuEntry["plugin"] = plugin
-    -- CSFv2 skills can have a different entry point
-    menuEntry["CSFv2"] = 0
     -- enable it by default; we disable it in Papyrus
     menuEntry["Disabled"] = 0
 
@@ -95,11 +123,9 @@ function msm.truncateV2(collection)
                     r["plugin"] = t["LevelFile"]
                 end
                 r["ShowMenuForm"] = 0
-                r["CSFv2"] = 1
             else
                 r["plugin"] = t["ShowMenuFile"]
                 r["ShowMenu"] = "__formData|"..t["ShowMenuFile"].."|"..t["ShowMenuId"]
-                r["CSFv2"] = 0
             end
             r["icon_loc"] = "data/interface/MetaSkillsMenu/" .. r["Name"] .. " " .. string.gsub(r["plugin"], ".esp", ".dds")
             r["icon_exists"] = 0
