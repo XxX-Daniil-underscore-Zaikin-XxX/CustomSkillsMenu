@@ -49,7 +49,7 @@ function msm.truncateV3(collection)
             end
             -- process entire skill tree into one CSM selection
             local processedSkill = msm.processSkillV3(skillId, plugin, showMenuId)
-            --sanity check
+            -- sanity check
             if processedSkill ~= nil then
                 ret[skillId] = processedSkill
             end

@@ -110,7 +110,6 @@ function load_data()
         string showMenu = JMap.getStr(fileobj, "ShowMenu")
 
         Writelog("Loading skills from file: " + skillId)
-        ;bool isCsfV2 = JMap.getInt(fileobj, "CSFv2") as bool
         if (showMenu == "")
             WriteLog("Legacy or legacy-style skill. Will call CSF with skill ID (" + skillId + ")")
         else
@@ -186,7 +185,6 @@ event SelectedMenu(string eventName, string strArg, float numArg, Form sender)
     ; get chosen skill object from config
     int modObject = JValue.addToPool(JMap.getObj(MSMData, strArg), "menuData")
 
-    ;bool isCsfV2 = JMap.getInt(modObject, "CSFv2")
     string showMenu = JMap.getStr(modObject, "ShowMenu")
 
     if (showMenu == "")
