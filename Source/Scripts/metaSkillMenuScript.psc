@@ -65,38 +65,44 @@ EndFunction
 ; run on game load
 ; could be cleaned up and wrapped into loops, but I'm not sure if the comprehensibility trade-off is worth it
 function load_data()
-    string poolName = "menuInfoPool"
+    string csfV2Path = "data/NetScriptFramework/Plugins"
     ; turn files to array of strings
-    int jCsfFilesV3 = JValue.addToPool(JValue.readFromDirectory("data/SKSE/Plugins/CustomSkills/", ".json"), poolName)
+    int jCsfFilesV3 = JValue.addToPool(JValue.readFromDirectory("data/SKSE/Plugins/CustomSkills/", ".json"), "menuInfoPool")
     jvalue.writetofile(jCsfFilesV3, "data/interface/MetaSkillsMenu/rawData.json")
-    int jConfigsV3 = JValue.addToPool(JValue.evalLuaObj(jCsfFilesV3, "return msm.truncateV3(jobject)"), poolName)
+    int jConfigsV3 = JValue.addToPool(JValue.evalLuaObj(jCsfFilesV3, "return msm.truncateV3(jobject)"), "menuInfoPool")
 
     ; get contents of Custom Skills directory and process it
-    int jCsfFilesV2 = JValue.addToPool(JArray.objectWithStrings(JContainers.contentsOfDirectoryAtPath("data/NetScriptFramework/Plugins", ".txt")), poolName)
-    int jConfigsV2 = JValue.addToPool(JValue.evalLuaObj(jCsfFilesV2, "return msm.truncateV2(jobject)"), poolName)
+    ; IF that directory exists
+    int jCsfFilesV2
+    if JContainers.fileExistsAtPath(csfV2Path)
+        int jCsfFilesV2 = JValue.addToPool(JArray.object(), "menuInfoPool")
+    else
+        int jCsfFilesV2 = JValue.addToPool(JArray.objectWithStrings(JContainers.contentsOfDirectoryAtPath(csfV2Path, ".txt")), "menuInfoPool")
+    endif
+    int jConfigsV2 = JValue.addToPool(JValue.evalLuaObj(jCsfFilesV2, "return msm.truncateV2(jobject)"), "menuInfoPool")
 
     ; read saved data
-    int hideData = tryGetObjFromFile("data/interface/MetaSkillsMenu/MSMHidden.json", poolName)
-    int savedData = tryGetObjFromFile("data/interface/MetaSkillsMenu/MSMData.json", poolName)
+    int hideData = tryGetObjFromFile("data/interface/MetaSkillsMenu/MSMHidden.json", "menuInfoPool")
+    int savedData = tryGetObjFromFile("data/interface/MetaSkillsMenu/MSMData.json", "menuInfoPool")
 
     ; First we overwrite the CSF v3 .json data with MSMData.json
-    int loadedConfigs = JValue.addToPool(JMap.object(), poolName)
+    int loadedConfigs = JValue.addToPool(JMap.object(), "menuInfoPool")
     JMap.setObj(loadedConfigs, "original", savedData)
     JMap.setObj(loadedConfigs, "new", jConfigsV3)
-    int configsTrimmedV3 = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.mergeMenuOptionsHelper(jobject)"), poolName)
+    int configsTrimmedV3 = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.mergeMenuOptionsHelper(jobject)"), "menuInfoPool")
 
     ; Then we overwrite the CSF v2 data with our combined data
     JMap.setObj(loadedConfigs, "original", configsTrimmedV3)
     Jmap.setObj(loadedConfigs, "new", jConfigsV2)
-    int allConfigsTrimmed = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.mergeMenuOptionsHelper(jobject)"), poolName)
+    int allConfigsTrimmed = JValue.addToPool(JValue.evalLuaObj(loadedConfigs, "return msm.mergeMenuOptionsHelper(jobject)"), "menuInfoPool")
 
     ; process hidden data also
-    int jConfWithHidden = JValue.addToPool(JMap.object(), poolName)
+    int jConfWithHidden = JValue.addToPool(JMap.object(), "menuInfoPool")
     JMap.setObj(jConfWithHidden, "menus", allConfigsTrimmed)
     JMap.setObj(jConfWithHidden, "hidden", hideData)
-    int jHiddenReturn = JValue.addToPool(JValue.evalLuaObj(jConfWithHidden, "return msm.applyHiddenHelper(jobject)"), poolName)
+    int jHiddenReturn = JValue.addToPool(JValue.evalLuaObj(jConfWithHidden, "return msm.applyHiddenHelper(jobject)"), "menuInfoPool")
 
-    int jCustomMenuPreFormatted = JValue.addToPool(JMap.getObj(jHiddenReturn, "menus"), poolName)
+    int jCustomMenuPreFormatted = JValue.addToPool(JMap.getObj(jHiddenReturn, "menus"), "menuInfoPool")
 
     ; start at the beginning
     string skillId = jmap.nextkey(jCustomMenuPreFormatted)
@@ -148,7 +154,7 @@ function load_data()
     ; write to DB for faster access
     JDB.solveObjSetter(".CustomSkillsMenuv3.MenuData", jCustomMenuPreFormatted, createMissingKeys=true)
 
-    JValue.cleanPool(poolName)
+    JValue.cleanPool("menuInfoPool")
 endfunction
 
 event OpenMenu(string eventName, string strArg, float numArg, Form sender)
