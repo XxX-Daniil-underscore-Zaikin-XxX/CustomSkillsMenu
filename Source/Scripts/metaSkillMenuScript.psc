@@ -66,20 +66,32 @@ EndFunction
 ; could be cleaned up and wrapped into loops, but I'm not sure if the comprehensibility trade-off is worth it
 function load_data()
     string csfV2Path = "data/NetScriptFramework/Plugins"
-    ; turn files to array of strings
-    int jCsfFilesV3 = JValue.addToPool(JValue.readFromDirectory("data/SKSE/Plugins/CustomSkills/", ".json"), "menuInfoPool")
-    jvalue.writetofile(jCsfFilesV3, "data/interface/MetaSkillsMenu/rawData.json")
+    string csfV3Path = "data/SKSE/Plugins/CustomSkills/"
+    b_SkillTreesPresent = false
+    b_SkillTreesInstalled = false
+
+    ; get contents of CSF v3 directory if it exists
+    ; otherwise, return empty object
+    int jCsfFilesV3
+    if !JContainers.fileExistsAtPath(csfV3Path)
+        jCsfFilesV3 = JValue.addToPool(JArray.object(), "menuInfoPool")
+    else
+        string[] jCsfFileNamesV3 = JContainers.contentsOfDirectoryAtPath(csfV3Path, ".txt") ; if this errors, we get an empty array
+        jCsfFilesV3 = JValue.addToPool(JArray.objectWithStrings(jCsfFileNamesV3), "menuInfoPool")
+    endif
+    ; process the result, empty or otherwise
     int jConfigsV3 = JValue.addToPool(JValue.evalLuaObj(jCsfFilesV3, "return msm.truncateV3(jobject)"), "menuInfoPool")
 
-    ; get contents of Custom Skills directory and process it
-    ; IF that directory exists
+    ; get contents of CSF v2 directory if it exists
+    ; otherwise, return empty object
     int jCsfFilesV2
-    string[] jCsfFileNamesV2 = JContainers.contentsOfDirectoryAtPath(csfV2Path, ".txt")
-    if jCsfFileNamesV2.Length == 0
+    if !JContainers.fileExistsAtPath(csfV2Path)
         jCsfFilesV2 = JValue.addToPool(JArray.object(), "menuInfoPool")
     else
+        string[] jCsfFileNamesV2 = JContainers.contentsOfDirectoryAtPath(csfV2Path, ".txt") ; if this errors, we get an empty array
         jCsfFilesV2 = JValue.addToPool(JArray.objectWithStrings(jCsfFileNamesV2), "menuInfoPool")
     endif
+    ; process result, empty or otherwise
     int jConfigsV2 = JValue.addToPool(JValue.evalLuaObj(jCsfFilesV2, "return msm.truncateV2(jobject)"), "menuInfoPool")
 
     ; read saved data
@@ -110,6 +122,7 @@ function load_data()
     ; WARNING
     ; We only load skill groups with a `ShowMenu`
     while skillId
+        
         string filePoolName = "iterateFilePool"
         ; grab object associated with key
         int fileobj = JValue.addToPool(jmap.getobj(jCustomMenuPreFormatted, skillId), filePoolName)
@@ -125,10 +138,13 @@ function load_data()
         
         WriteLog("Hidden? " + JMap.getInt(fileobj, "hidden"))
         if (game.IsPluginInstalled(pluginName))
-            ; if at least one is unhidden, we set it to true
+            writelog("Found " + pluginName + ", re-enabling skillset", 0)
+            JMap.setInt(fileobj, "Disabled", 0)
+            ; if at least one is unhidden, then we can open the menu
             if JMap.getInt(fileobj, "hidden") == 0
                 b_SkillTreesPresent = True
             endif
+            b_SkillTreesInstalled = true
         else
             string skillName = JMap.getStr(fileobj, "Name")
             writelog("FAILED TO FIND MOD FOR " + skillName + ", MISSING ESP: " + pluginName, 0)
@@ -140,13 +156,6 @@ function load_data()
         skillId = jmap.nextkey(jCustomMenuPreFormatted, skillId)
         JValue.cleanPool(filePoolName)
     endwhile
-
-    ; check if we even found anything
-    if jmap.count(jCustomMenuPreFormatted) > 0
-        b_SkillTreesInstalled = true
-    Else
-        b_SkillTreesInstalled = false
-    endif
 
     ; write our data to files
     jvalue.writetofile(JMap.getObj(jHiddenReturn, "hidden"), "data/interface/MetaSkillsMenu/MSMHidden.json")
