@@ -218,6 +218,19 @@ function msm.transferToHidden(menus, hiddenOptions)
     return hiddenOptions
 end
 
+-- given menus and the hidden cache, returns whether any skills are unhidden or undisabled
+function msm.checkAnyUnhidden(config)
+    local anyUnhidden = false
+    for menuName, menu in pairs(config["menus"]) do
+        -- if a skill is unhidden and undisabled, we return true
+        if menu["Disabled"] == 0 and config["hidden"][menuName] and config["hidden"][menuName]["hidden"] == 0 then
+            anyUnhidden = true
+            break
+        end
+    end
+    return anyUnhidden
+end
+
 -- forced to use this helper because JContainers only allows one argument
 function msm.mergeMenuOptionsHelper(collection)
     return msm.mergeMenuOptions(collection["original"], collection["new"])

@@ -171,7 +171,28 @@ event OpenMenu(string eventName, string strArg, float numArg, Form sender)
     doOpenMenu()
 endEvent
 
+; checks hidden cache (through lua) to get up-to-date info on hidden skills
+bool function checkSkillPresence()
+    int jSkillsDB = JDB.SolveObj(".CustomSkillsMenuv3.MenuData")
+    int jHideData = JValue.readFromFile("data/interface/MetaSkillsMenu/MSMHidden.json")
+
+    int jCheckInput = JMap.object()
+    JMap.setObj(jCheckInput, "menus", jSkillsDB)
+    JMap.setObj(jCheckInput, "hidden", jHideData)
+
+    bool anyPresent = JValue.evalLuaInt(jCheckInput, "return msm.checkAnyUnhidden(jobject)")
+    
+    Jvalue.release(jHideData)
+    JValue.release(jCheckInput)
+    return anyPresent
+endFunction
+
+function updateSkillPresence()
+    b_SkillTreesPresent = checkSkillPresence()
+endFunction
+
 function doOpenMenu()
+    updateSkillPresence()
     if b_CustomSkillsExists && b_SkillTreesInstalled && b_SkillTreesPresent
         UI.OpenCustomMenu("MetaSkillsMenu/CustomMetaMenu")
     elseif b_SkillTreesInstalled && !b_SkillTreesPresent
