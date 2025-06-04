@@ -74,10 +74,11 @@ function load_data()
     ; get contents of Custom Skills directory and process it
     ; IF that directory exists
     int jCsfFilesV2
-    if JContainers.fileExistsAtPath(csfV2Path)
+    string[] jCsfFileNamesV2 = JContainers.contentsOfDirectoryAtPath(csfV2Path, ".txt")
+    if jCsfFileNamesV2.Length == 0
         jCsfFilesV2 = JValue.addToPool(JArray.object(), "menuInfoPool")
     else
-        jCsfFilesV2 = JValue.addToPool(JArray.objectWithStrings(JContainers.contentsOfDirectoryAtPath(csfV2Path, ".txt")), "menuInfoPool")
+        jCsfFilesV2 = JValue.addToPool(JArray.objectWithStrings(jCsfFileNamesV2), "menuInfoPool")
     endif
     int jConfigsV2 = JValue.addToPool(JValue.evalLuaObj(jCsfFilesV2, "return msm.truncateV2(jobject)"), "menuInfoPool")
 
