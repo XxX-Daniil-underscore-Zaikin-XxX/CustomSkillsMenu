@@ -122,7 +122,6 @@ function load_data()
     ; WARNING
     ; We only load skill groups with a `ShowMenu`
     while skillId
-        
         string filePoolName = "iterateFilePool"
         ; grab object associated with key
         int fileobj = JValue.addToPool(jmap.getobj(jCustomMenuPreFormatted, skillId), filePoolName)
