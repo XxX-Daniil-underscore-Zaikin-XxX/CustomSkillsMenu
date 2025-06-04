@@ -185,20 +185,18 @@ function msm.applyHidden(menus, hiddenOptions)
 end
 
 -- sets the hidden key of each menu item based on the hiddenoption
+-- we overwrite whatever's in the menu
 function msm.setHidden(menus, hiddenOptions)
     for menuName, hidden in pairs(hiddenOptions) do
-        if hidden == nil then
+        local menu = menus[menuName]
+        if menu == nil then
             goto continue
         end
-        local menu = menus[menuName]
-        local hiddenSwitch = hidden["hidden"]
-        if hiddenSwitch ~= nil then
-            if menu ~= nil then
-                menu["hidden"] = hiddenSwitch
-            end
+        if hidden and hidden["hidden"] ~= nil then
+            menu["hidden"] = hidden["hidden"]
         else
             menu["hidden"] = false
-        end
+        end   
         ::continue::
     end
     return menus
@@ -207,8 +205,8 @@ end
 -- transfer menus to hiddenOptions to preserve original mod's functionality
 function msm.transferToHidden(menus, hiddenOptions)
     for menuName, menu in pairs(menus) do
-        if hiddenOptions[menuName] == nil then
-            local newHidden = false
+        if hiddenOptions[menuName] == nil or hiddenOptions[menuName]["hidden"] == nil then
+            local newHidden = 0
             if menu["hidden"] ~= nil then
                 newHidden = menu["hidden"]
             end
@@ -218,6 +216,19 @@ function msm.transferToHidden(menus, hiddenOptions)
         end
     end
     return hiddenOptions
+end
+
+-- given menus and the hidden cache, returns whether any skills are unhidden or undisabled
+function msm.checkAnyUnhidden(config)
+    local anyUnhidden = false
+    for menuName, menu in pairs(config["menus"]) do
+        -- if a skill is unhidden and undisabled, we return true
+        if menu["Disabled"] == 0 and config["hidden"][menuName] and config["hidden"][menuName]["hidden"] == 0 then
+            anyUnhidden = true
+            break
+        end
+    end
+    return anyUnhidden
 end
 
 -- forced to use this helper because JContainers only allows one argument
