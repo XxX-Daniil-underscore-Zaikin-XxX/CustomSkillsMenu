@@ -82,7 +82,7 @@ event onHighlightST()
         string csfName = stateNameFull[1]
         int data = JValue.ReadFromFile(dataPath)
         SetInfoText("ESP Name: " \
-            + StringUtil.Split(JValue.SolveStr(data, "."+csfName+".showMenu"), "|")[0] \
+            + JValue.SolveStr(data, "."+csfName+".plugin") \
             + "\n" + "Icon path: " \
             + JValue.SolveStr(data, "."+csfName+".icon_loc") \
         )
