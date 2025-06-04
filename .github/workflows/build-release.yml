@@ -133,8 +133,10 @@ jobs:
         - name: Fetch Caprica Prerelease
           if: steps.cache-com.outputs.cache-hit != 'true'
           shell: bash
-          # temporarily download Caprica from run instead of release
-          run: gh run download 10979332233 -R Orvid/Caprica
+          # temporarily download Caprica from temporary release
+          run: |
+            gh release download -p "Caprica*" -R XxX-Daniil-underscore-Zaikin-XxX/Caprica
+            unzip Caprica* -d Caprica
           env:
             GH_TOKEN: ${{ github.token }}
 
@@ -143,8 +145,8 @@ jobs:
           shell: bash
           # temporarily download Pyro from run instead of release
           run: |
-            gh run download 10850094629 -R XxX-Daniil-underscore-Zaikin-XxX/pyro
-            mv pyro* Pyro
+            gh release download -p "pyro*" -R XxX-Daniil-underscore-Zaikin-XxX/pyro
+            unzip pyro* -d Pyro
             ls -aR
           env:
             GH_TOKEN: ${{ github.token }}
