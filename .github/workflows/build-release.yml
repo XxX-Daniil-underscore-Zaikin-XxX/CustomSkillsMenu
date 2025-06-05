@@ -279,6 +279,7 @@ jobs:
           artifacts: ${{ env.TRIMMED_VERSION }}.zip
 
       - name: Remove temporary artifacts
-        uses: geekyeggo/delete-artifact@v2
+        uses: geekyeggo/delete-artifact@v5
         with:
           name: ${{ env.TRIMMED_VERSION }}
+          failOnError: false
