@@ -7,6 +7,6 @@ event OnPlayerLoadGame()
 endEvent
 
 function onLoad()
-    Utility.WaitMenuMode(1.0)
+    Utility.WaitMenuMode(10.0)
     (MetaSkillsMenu as metaSkillMenuScript).startup()
 endfunction
