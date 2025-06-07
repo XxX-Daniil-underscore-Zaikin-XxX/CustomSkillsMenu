@@ -3,6 +3,7 @@
 local msm = {}
 
 -- we receive our collection of every Custom Skill at once
+-- using JValue.readFromDirectory
 -- and we return a trimmed version with only what CSM needs
 function msm.truncateV3(collection)
     local ret = JMap.object()
@@ -87,6 +88,7 @@ function msm.processSkillV3(skillId, plugin, showMenuId)
 end
 
 -- from the original CSM
+-- input is array of filenames (e.g. from JContainers.contentsOfDirectoryAtPath)
 -- don't broke what ain't fix
 function msm.truncateV2(collection)
     local ret = JMap.object()
