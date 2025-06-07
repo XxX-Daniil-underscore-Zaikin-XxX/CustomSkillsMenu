@@ -21,8 +21,6 @@ string Function GetHiddenFilename() global
     return "MSMHidden.json"
 EndFunction
                 
-
-
 string Function GetHiddenFilePath() global
     return GetCSMPath() + "/" + GetHiddenFilename()
 EndFunction
@@ -66,6 +64,7 @@ bool function GetHiddenInFile(string skillName, string filePath) global
     return ret
 endFunction
 
+; sets a skill's Hidden property in the given file (assuming skill's name is top level)
 function SetHiddenInFile(string skillName, bool newHidden, string filePath) global
     int file = JValue.readFromFile(filePath)
     bool oldHidden = GetHiddenInFile(skillName, filePath)
