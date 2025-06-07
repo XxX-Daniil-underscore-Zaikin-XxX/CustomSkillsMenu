@@ -62,17 +62,11 @@ event OnSelectST()
     string[] stateNameFull = StringUtil.Split(GetState(), "___")
     if stateNameFull.Length > 1
         String csfName = stateNameFull[1]
-        int data = JValue.ReadFromFile(dataPath)
-        int hiddenCache = JValue.ReadFromFile(hiddenCachePath)
 
-        JValue.SolveIntSetter(data, "."+csfName+".Hidden", (!JValue.SolveInt(data, "."+csfName+".Hidden") as bool) as int)
-        JValue.SolveIntSetter(hiddenCache, "."+csfName+".Hidden", JValue.SolveInt(data, "."+csfName+".Hidden"))
-        SetToggleOptionValueST((JValue.SolveInt(data, "."+csfName+".Hidden") as bool), false, GetState())
+        metaSkillMenuAPI.ToggleHidden(csfName)
+        bool newHidden = metaSkillMenuAPI.GetHidden(csfName)
 
-        JValue.WriteToFile(data, dataPath)
-        JValue.WriteToFile(hiddenCache, hiddenCachePath)
-        JValue.Release(data)
-        JValue.Release(hiddenCache)
+        SetToggleOptionValueST(newHidden, false, GetState())
     endif
 endEvent
 

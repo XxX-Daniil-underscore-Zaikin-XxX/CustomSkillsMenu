@@ -44,11 +44,11 @@ string function GetSkillHiddenPath(string skillName) global
 endFunction
 
 bool function GetHidden(string skillName) global
-    return JDB.solveInt(getSkillHiddenPath(skillName))
+    return JDB.solveInt(getDBSkillHiddenPath(skillName))
 endFunction
 
 function SetHidden(string skillName, bool newHidden) global
-    JDB.solveIntSetter(getSkillHiddenPath(skillName), newHidden as Int)
+    JDB.solveIntSetter(getDBSkillHiddenPath(skillName), newHidden as Int)
 
     SetHiddenInFile(skillName, newHidden, GetHiddenFilePath())
     SetHiddenInFile(skillName, newHidden, GetDataFilePath())
@@ -58,11 +58,39 @@ function ToggleHidden(string skillName) global
     SetHidden(skillName, !GetHidden(skillName))
 endFunction
 
+bool function GetHiddenInFile(string skillName, string filePath) global
+    int file = JValue.readFromFile(filePath)
+    bool ret = JValue.solveInt(file, getSkillHiddenPath(skillName))
+
+    JValue.release(file)
+    return ret
+endFunction
+
 function SetHiddenInFile(string skillName, bool newHidden, string filePath) global
     int file = JValue.readFromFile(filePath)
+    bool oldHidden = GetHiddenInFile(skillName, filePath)
 
-    JValue.solveIntSetter(file, getSkillHiddenPath(skillName), newHidden as Int)
+    if oldHidden != newHidden
+        JValue.solveIntSetter(file, getSkillHiddenPath(skillName), newHidden as Int)
+        JValue.writeToFile(file, filePath)
 
-    JValue.writeToFile(file, filePath)
+        bool updatedHidden = GetHiddenInFile(skillName, filePath)
+        if updatedHidden != newHidden
+            WriteLog("Unable to update Hidden in " + filePath + " to " + newHidden, 2)
+        endif
+    endif
+
     JValue.release(file)
 endFunction
+
+function WriteLog(string printMessage, int error = 0) global
+    string a = "Custom Skill Menu: "
+    if error >= 1
+        Debug.Notification(a + printMessage)
+    endif
+    if error >= 2
+        Debug.MessageBox(a +"\n"+ printMessage)
+    endif
+    ConsoleUtil.PrintMessage(a + printMessage)
+    Debug.Trace(a + printMessage)
+endfunction

@@ -1,6 +1,8 @@
 Scriptname metaSkillMenuScript extends Quest  
 {Controller script for MetaSkillMenu}
 
+import metaSkillMenuAPI
+
 ; whether the mod and its requirements are installed
 bool b_CustomSkillsExists = false
 ; whether any Custom Skills are installed
@@ -233,15 +235,3 @@ event SelectedMenu(string eventName, string strArg, float numArg, Form sender)
     UI.CloseCustomMenu()
     JValue.cleanPool("menuData")
 endEvent
-
-function WriteLog(string printMessage, int error = 0)
-    string a = "Custom Skill Menu: "
-    if error >= 1
-        Debug.Notification(a + printMessage)
-    endif
-    if error >= 2
-        Debug.MessageBox(a +"\n"+ printMessage)
-    endif
-    ConsoleUtil.PrintMessage(a + printMessage)
-    Debug.Trace(a + printMessage)
-endfunction
