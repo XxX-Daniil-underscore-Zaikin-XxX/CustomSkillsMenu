@@ -66,7 +66,7 @@ EndFunction
 ; could be cleaned up and wrapped into loops, but I'm not sure if the comprehensibility trade-off is worth it
 function load_data()
     string csfV2Path = "data/NetScriptFramework/Plugins"
-    string csfV3Path = "data/SKSE/Plugins/CustomSkills/"
+    string csfV3Path = "data/SKSE/Plugins/CustomSkills"
     b_SkillTreesPresent = false
     b_SkillTreesInstalled = false
 
@@ -76,8 +76,7 @@ function load_data()
     if !JContainers.fileExistsAtPath(csfV3Path)
         jCsfFilesV3 = JValue.addToPool(JArray.object(), "menuInfoPool")
     else
-        string[] jCsfFileNamesV3 = JContainers.contentsOfDirectoryAtPath(csfV3Path, ".txt") ; if this errors, we get an empty array
-        jCsfFilesV3 = JValue.addToPool(JArray.objectWithStrings(jCsfFileNamesV3), "menuInfoPool")
+        jCsfFilesV3 = JValue.addToPool(JValue.readFromDirectory(csfV3Path, ".json"), "menuInfoPool") ; if this errors, we get an empty array
     endif
     ; process the result, empty or otherwise
     int jConfigsV3 = JValue.addToPool(JValue.evalLuaObj(jCsfFilesV3, "return msm.truncateV3(jobject)"), "menuInfoPool")
@@ -122,6 +121,7 @@ function load_data()
     ; WARNING
     ; We only load skill groups with a `ShowMenu`
     while skillId
+        
         string filePoolName = "iterateFilePool"
         ; grab object associated with key
         int fileobj = JValue.addToPool(jmap.getobj(jCustomMenuPreFormatted, skillId), filePoolName)
