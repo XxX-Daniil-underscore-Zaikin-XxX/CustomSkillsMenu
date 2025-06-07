@@ -1,57 +1,67 @@
 Scriptname metaSkillMenuAPI
 
-string      Property CSM_Database           = ".CustomSkillsMenuv3.MenuData"        auto hidden
 
-string      Property CSM_Path               = "data/interface/MetaSkillsMenu"       auto hidden
+; there's gotta be a better way to do this...
+; but beats me thb
+string Function GetCSMPath() global
+    return "data/interface/MetaSkillsMenu"
+EndFunction
 
-string      Property CSM_v2Path             = "data/NetScriptFramework/Plugins"     auto hidden
-string      Property CSM_v3Path             = "data/SKSE/Plugins/CustomSkills"      auto hidden
+string Function GetCSMJDBPath() global
+    return ".CustomSkillsMenuv3.MenuData"
+EndFunction
 
-string      Property CSM_HiddenFilename     = "MSMHidden.json"                      auto hidden
-string      Property CSM_DataFilename       = "MSMData.json"                        auto hidden
 
-string      Property CSM_HiddenFile                                                 hidden
-    string Function Get()
-        return CSM_Path + "/" + CSM_HiddenFilename
-    EndFunction
-    Function Set(string value)
-    EndFunction
-EndProperty
 
-string      Property CSM_DataFile                                                   hidden
-    string Function Get()
-        return CSM_Path + "/" + CSM_DataFilename
-    EndFunction
-    Function Set(string value)
-    EndFunction
-EndProperty
+string Function GetDataFilename() global
+    return "MSMData.json" 
+EndFunction
+
+string Function GetHiddenFilename() global
+    return "MSMHidden.json"
+EndFunction
+                
+
+
+string Function GetHiddenFilePath() global
+    return GetCSMPath() + "/" + GetHiddenFilename()
+EndFunction
+
+string Function GetDataFilePath() global
+    return GetCSMPath() + "/" + GetDataFilename()
+EndFunction
+
 
 ; For all of below, we will assume the JDB is the source of truth
 
 ; gets path to JDB entry for the Hidden prop of the skill
-string function getSkillHiddenPath(string skillName)
-    return CSM_Database + "." + skillName + ".Hidden"
+string function GetDBSkillHiddenPath(string skillName) global
+    return GetCSMJDBPath() + getSkillHiddenPath(skillName)
 endFunction
 
-bool function GetCSMHidden(string skillName)
+string function GetSkillHiddenPath(string skillName) global
+    return "." + skillName + ".Hidden"
+endFunction
+
+bool function GetHidden(string skillName) global
     return JDB.solveInt(getSkillHiddenPath(skillName))
 endFunction
 
-function SetCSMHidden(string skillName, bool newHidden)
+function SetHidden(string skillName, bool newHidden) global
     JDB.solveIntSetter(getSkillHiddenPath(skillName), newHidden as Int)
 
-    SetCSMHiddenInFile(skillName, newHidden, CSM_DataFile)
-    SetCSMHiddenInFile(skillName, newHidden, CSM_HiddenFile)
+    SetHiddenInFile(skillName, newHidden, GetHiddenFilePath())
+    SetHiddenInFile(skillName, newHidden, GetDataFilePath())
 endFunction
 
-function ToggleCSMHidden(string skillName)
-    SetCSMHidden(skillName, !GetCSMHidden(skillName))
+function ToggleHidden(string skillName) global
+    SetHidden(skillName, !GetHidden(skillName))
 endFunction
 
-function SetCSMHiddenInFile(string skillName, bool newHidden, string filePath)
+function SetHiddenInFile(string skillName, bool newHidden, string filePath) global
     int file = JValue.readFromFile(filePath)
 
-    JValue.solveIntSetter(file, "." + skillName + ".Hidden", newHidden as Int)
+    JValue.solveIntSetter(file, getSkillHiddenPath(skillName), newHidden as Int)
 
     JValue.writeToFile(file, filePath)
     JValue.release(file)
