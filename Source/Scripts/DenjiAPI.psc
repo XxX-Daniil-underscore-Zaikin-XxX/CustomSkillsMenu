@@ -67,7 +67,7 @@ endFunction
 
 ; JContainers path to Hidden prop of skillKey
 string function GetSkillHiddenPath(string skillKey) global
-    return "." + skillKey + ".Hidden"
+    return "." + skillKey + ".hidden"
 endFunction
 
 
