@@ -49,14 +49,14 @@ string Function GetDataFilePath() global
     return GetCSMPath() + "/" + GetDataFilename()
 EndFunction
 
-; path to JDB entry for the Hidden prop of skillName
-string function GetDBSkillHiddenPath(string skillName) global
-    return GetCSMJDBPath() + getSkillHiddenPath(skillName)
+; path to JDB entry for the Hidden prop of skillKey
+string function GetDBSkillHiddenPath(string skillKey) global
+    return GetCSMJDBPath() + getSkillHiddenPath(skillKey)
 endFunction
 
-; JContainers path to Hidden prop of skillName
-string function GetSkillHiddenPath(string skillName) global
-    return "." + skillName + ".Hidden"
+; JContainers path to Hidden prop of skillKey
+string function GetSkillHiddenPath(string skillKey) global
+    return "." + skillKey + ".Hidden"
 endFunction
 
 
@@ -71,29 +71,29 @@ the source of truth
 /;
 
 
-; determines whether skillName is hidden via JDB
-bool function GetHidden(string skillName) global
-    return JDB.solveInt(getDBSkillHiddenPath(skillName))
+; determines whether skillKey is hidden via JDB
+bool function GetHidden(string skillKey) global
+    return JDB.solveInt(getDBSkillHiddenPath(skillKey))
 endFunction
 
-; sets skillName's hidden to newHidden
-function SetHidden(string skillName, bool newHidden) global
-    JDB.solveIntSetter(getDBSkillHiddenPath(skillName), newHidden as Int)
+; sets skillKey's hidden to newHidden
+function SetHidden(string skillKey, bool newHidden) global
+    JDB.solveIntSetter(getDBSkillHiddenPath(skillKey), newHidden as Int)
 
-    SetHiddenInFile(skillName, newHidden, GetHiddenFilePath())
-    SetHiddenInFile(skillName, newHidden, GetDataFilePath())
+    SetHiddenInFile(skillKey, newHidden, GetHiddenFilePath())
+    SetHiddenInFile(skillKey, newHidden, GetDataFilePath())
 endFunction
 
-; inverts skillName's hidden
-function ToggleHidden(string skillName) global
-    SetHidden(skillName, !GetHidden(skillName))
+; inverts skillKey's hidden
+function ToggleHidden(string skillKey) global
+    SetHidden(skillKey, !GetHidden(skillKey))
 endFunction
 
-; determines skillName's hidden from a file given filePath
+; determines skillKey's hidden from a file given filePath
 ; assumes file is formatted like MSMData.json
-bool function GetHiddenInFile(string skillName, string filePath) global
+bool function GetHiddenInFile(string skillKey, string filePath) global
     int file = JValue.readFromFile(filePath)
-    bool ret = JValue.solveInt(file, getSkillHiddenPath(skillName))
+    bool ret = JValue.solveInt(file, getSkillHiddenPath(skillKey))
 
     JValue.release(file)
     return ret
@@ -101,15 +101,15 @@ endFunction
 
 ; sets a skill's Hidden property in the given file
 ; assumes file is formatted like MSMData.json or MSMHidden.json
-function SetHiddenInFile(string skillName, bool newHidden, string filePath) global
+function SetHiddenInFile(string skillKey, bool newHidden, string filePath) global
     int file = JValue.readFromFile(filePath)
-    bool oldHidden = GetHiddenInFile(skillName, filePath)
+    bool oldHidden = GetHiddenInFile(skillKey, filePath)
 
     if oldHidden != newHidden
-        JValue.solveIntSetter(file, getSkillHiddenPath(skillName), newHidden as Int)
+        JValue.solveIntSetter(file, getSkillHiddenPath(skillKey), newHidden as Int)
         JValue.writeToFile(file, filePath)
 
-        bool updatedHidden = GetHiddenInFile(skillName, filePath)
+        bool updatedHidden = GetHiddenInFile(skillKey, filePath)
         if updatedHidden != newHidden
             WriteLog("Unable to update Hidden in " + filePath + " to " + newHidden, 2)
         endif
