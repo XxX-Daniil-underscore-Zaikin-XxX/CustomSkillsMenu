@@ -1,7 +1,7 @@
 Scriptname metaSkillMenuScript extends Quest  
 {Controller script for MetaSkillMenu}
 
-import metaSkillMenuAPI
+import DenjiAPI
 
 ; whether the mod and its requirements are installed
 bool b_CustomSkillsExists = false

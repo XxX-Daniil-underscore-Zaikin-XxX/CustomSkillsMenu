@@ -63,8 +63,8 @@ event OnSelectST()
     if stateNameFull.Length > 1
         String csfName = stateNameFull[1]
 
-        metaSkillMenuAPI.ToggleHidden(csfName)
-        bool newHidden = metaSkillMenuAPI.GetHidden(csfName)
+        DenjiAPI.ToggleHidden(csfName)
+        bool newHidden = DenjiAPI.GetHidden(csfName)
 
         SetToggleOptionValueST(newHidden, false, GetState())
     endif
