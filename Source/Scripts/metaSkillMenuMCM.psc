@@ -27,18 +27,19 @@ Event OnPageReset(string page)
     SetCursorPosition(3)
     SetCursorFillMode(TOP_TO_BOTTOM)
     
-    If (jcontainers.fileExistsAtPath(DenjiAPI.GetHiddenFilePath()) && jcontainers.fileExistsAtPath(DenjiAPI.GetDataFilePath()))
-        int data = JValue.ReadFromFile(DenjiAPI.GetDataFilePath())
-        String dataKey = JMap.NextKey(data)
-        while dataKey
-            string csfName = JValue.SolveStr(data, "."+dataKey+".Name")
-            bool isHidden = JValue.SolveInt(data, "."+dataKey+".Hidden") as bool
-            AddToggleOptionST("ToggleHidden___"+dataKey, csfName, isHidden)
-            datakey = JMap.NextKey(data, datakey)
-        endwhile
-    Else
-        AddHeaderOption("Error, CSM database files not found.")
-    endif
+    int jMenuData = JDB.solveObj(DenjiAPI.GetCSMJDBPath())
+
+    string skillKey = JMap.nextKey(jMenuData)
+    While (skillKey)
+        string skillName = JValue.solveStr(jMenuData, "." + skillKey + ".Name")
+        bool isHidden = DenjiAPI.GetHidden(skillKey)
+
+        AddToggleOptionST("ToggleHidden___" + skillKey, skillName, isHidden)
+
+        skillKey = JMap.nextKey(jMenuData, skillKey)
+    EndWhile
+
+    JValue.release(jMenuData)
 endEvent
 
 state HintToggleState
