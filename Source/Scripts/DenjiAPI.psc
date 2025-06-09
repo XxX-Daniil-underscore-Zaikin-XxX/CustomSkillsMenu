@@ -37,6 +37,11 @@ EndFunction
 string Function GetHiddenFilename() global
     return "MSMHidden.json"
 EndFunction
+
+; Flash settings's filename
+string Function GetFlashSettingsFilename() global
+    return "MSM_FLASH_SETTINGS.json"
+EndFunction
           
 
 ; Path to hidden cache file relative to Skyrim
@@ -48,6 +53,12 @@ EndFunction
 string Function GetDataFilePath() global
     return GetCSMPath() + "/" + GetDataFilename()
 EndFunction
+
+; Path to flash settings
+string Function GetFlashSettingsFilePath() global
+    return GetCSMPath() + "/" + GetFlashSettingsFilename()
+EndFunction
+
 
 ; path to JDB entry for the Hidden prop of skillKey
 string function GetDBSkillHiddenPath(string skillKey) global

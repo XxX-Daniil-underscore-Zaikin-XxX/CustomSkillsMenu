@@ -5,7 +5,11 @@ Scriptname metaSkillMenuMCM extends SKI_ConfigBase
 
 metaSkillMenuScript property metaSkillMenuMain auto
 
-string flashDataPath = DenjiAPI.GetCSMPath() + "/MSM_FLASH_SETTINGS.json"
+string Property flashDataPath Hidden
+    string Function Get()
+        return DenjiAPI.GetFlashSettingsFilePath()
+    EndFunction
+EndProperty
 
 int OpenCustomSkillMenuKeycode = 0
 
