@@ -80,7 +80,7 @@ function msm.processSkillV3(skillId, plugin, showMenuId)
             " " ..
             string.gsub(plugin, ".esp", ".dds")
     menuEntry["icon_exists"] = 0
-    menuEntry["Hidden"] = 0
+    menuEntry["hidden"] = 0
     menuEntry["plugin"] = plugin
     -- enable it by default; we disable it in Papyrus
     menuEntry["Disabled"] = 0
