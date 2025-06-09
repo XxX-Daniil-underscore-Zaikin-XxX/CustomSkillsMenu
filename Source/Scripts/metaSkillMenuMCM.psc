@@ -5,9 +5,11 @@ Scriptname metaSkillMenuMCM extends SKI_ConfigBase
 
 metaSkillMenuScript property metaSkillMenuMain auto
 
-string hiddenCachePath = "data/interface/MetaSkillsMenu/MSMHidden.json"
-string dataPath = "data/interface/MetaSkillsMenu/MSMData.json"
-string flashDataPath = "data/interface/MetaSkillsMenu/MSM_FLASH_SETTINGS.json"
+string Property flashDataPath Hidden
+    string Function Get()
+        return DenjiAPI.GetFlashSettingsFilePath()
+    EndFunction
+EndProperty
 
 int OpenCustomSkillMenuKeycode = 0
 
@@ -29,18 +31,19 @@ Event OnPageReset(string page)
     SetCursorPosition(3)
     SetCursorFillMode(TOP_TO_BOTTOM)
     
-    If (jcontainers.fileExistsAtPath(hiddenCachePath) && jcontainers.fileExistsAtPath(dataPath))
-        int data = JValue.ReadFromFile(dataPath)
-        String dataKey = JMap.NextKey(data)
-        while dataKey
-            string csfName = JValue.SolveStr(data, "."+dataKey+".Name")
-            bool isHidden = JValue.SolveInt(data, "."+dataKey+".Hidden") as bool
-            AddToggleOptionST("ToggleHidden___"+dataKey, csfName, isHidden)
-            datakey = JMap.NextKey(data, datakey)
-        endwhile
-    Else
-        AddHeaderOption("Error, CSM database files not found.")
-    endif
+    int jMenuData = JDB.solveObj(DenjiAPI.GetCSMJDBPath())
+
+    string skillKey = JMap.nextKey(jMenuData)
+    While (skillKey)
+        string skillName = JValue.solveStr(jMenuData, "." + skillKey + ".Name")
+        bool isHidden = DenjiAPI.GetHidden(skillKey)
+
+        AddToggleOptionST("ToggleHidden___" + skillKey, skillName, isHidden)
+
+        skillKey = JMap.nextKey(jMenuData, skillKey)
+    EndWhile
+
+    JValue.release(jMenuData)
 endEvent
 
 state HintToggleState
@@ -62,17 +65,11 @@ event OnSelectST()
     string[] stateNameFull = StringUtil.Split(GetState(), "___")
     if stateNameFull.Length > 1
         String csfName = stateNameFull[1]
-        int data = JValue.ReadFromFile(dataPath)
-        int hiddenCache = JValue.ReadFromFile(hiddenCachePath)
 
-        JValue.SolveIntSetter(data, "."+csfName+".Hidden", (!JValue.SolveInt(data, "."+csfName+".Hidden") as bool) as int)
-        JValue.SolveIntSetter(hiddenCache, "."+csfName+".Hidden", JValue.SolveInt(data, "."+csfName+".Hidden"))
-        SetToggleOptionValueST((JValue.SolveInt(data, "."+csfName+".Hidden") as bool), false, GetState())
+        DenjiAPI.ToggleHidden(csfName)
+        bool newHidden = DenjiAPI.GetHidden(csfName)
 
-        JValue.WriteToFile(data, dataPath)
-        JValue.WriteToFile(hiddenCache, hiddenCachePath)
-        JValue.Release(data)
-        JValue.Release(hiddenCache)
+        SetToggleOptionValueST(newHidden, false, GetState())
     endif
 endEvent
 
@@ -80,7 +77,7 @@ event onHighlightST()
     string[] stateNameFull = StringUtil.Split(GetState(), "___")
     if stateNameFull.Length > 1
         string csfName = stateNameFull[1]
-        int data = JValue.ReadFromFile(dataPath)
+        int data = JValue.ReadFromFile(DenjiAPI.GetDataFilePath())
         SetInfoText("ESP Name: " \
             + JValue.SolveStr(data, "."+csfName+".plugin") \
             + "\n" + "Icon path: " \
