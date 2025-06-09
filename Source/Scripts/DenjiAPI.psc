@@ -16,6 +16,7 @@ PATHS AND STRINGS
 ==========================================================
 /;
 
+
 ; Gets path to the Custom Skills Menu data files
 string Function GetCSMPath() global
     return "data/interface/MetaSkillsMenu"
@@ -48,6 +49,17 @@ string Function GetDataFilePath() global
     return GetCSMPath() + "/" + GetDataFilename()
 EndFunction
 
+; path to JDB entry for the Hidden prop of skillName
+string function GetDBSkillHiddenPath(string skillName) global
+    return GetCSMJDBPath() + getSkillHiddenPath(skillName)
+endFunction
+
+; JContainers path to Hidden prop of skillName
+string function GetSkillHiddenPath(string skillName) global
+    return "." + skillName + ".Hidden"
+endFunction
+
+
 ;/
 ==========================================================
 HIDDEN OPERATIONS
@@ -58,16 +70,6 @@ the source of truth
 ==========================================================
 /;
 
-
-; gets path to JDB entry for the Hidden prop of skillName
-string function GetDBSkillHiddenPath(string skillName) global
-    return GetCSMJDBPath() + getSkillHiddenPath(skillName)
-endFunction
-
-; gets JContainers path to Hidden prop of skillName
-string function GetSkillHiddenPath(string skillName) global
-    return "." + skillName + ".Hidden"
-endFunction
 
 ; determines whether skillName is hidden via JDB
 bool function GetHidden(string skillName) global
@@ -115,6 +117,7 @@ function SetHiddenInFile(string skillName, bool newHidden, string filePath) glob
 
     JValue.release(file)
 endFunction
+
 
 ;/
 ==========================================================
