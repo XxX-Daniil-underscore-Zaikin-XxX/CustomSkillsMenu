@@ -5,9 +5,7 @@ Scriptname metaSkillMenuMCM extends SKI_ConfigBase
 
 metaSkillMenuScript property metaSkillMenuMain auto
 
-string hiddenCachePath = "data/interface/MetaSkillsMenu/MSMHidden.json"
-string dataPath = "data/interface/MetaSkillsMenu/MSMData.json"
-string flashDataPath = "data/interface/MetaSkillsMenu/MSM_FLASH_SETTINGS.json"
+string flashDataPath = DenjiAPI.GetCSMPath() + "/MSM_FLASH_SETTINGS.json"
 
 int OpenCustomSkillMenuKeycode = 0
 
@@ -29,8 +27,8 @@ Event OnPageReset(string page)
     SetCursorPosition(3)
     SetCursorFillMode(TOP_TO_BOTTOM)
     
-    If (jcontainers.fileExistsAtPath(hiddenCachePath) && jcontainers.fileExistsAtPath(dataPath))
-        int data = JValue.ReadFromFile(dataPath)
+    If (jcontainers.fileExistsAtPath(DenjiAPI.GetHiddenFilePath()) && jcontainers.fileExistsAtPath(DenjiAPI.GetDataFilePath()))
+        int data = JValue.ReadFromFile(DenjiAPI.GetDataFilePath())
         String dataKey = JMap.NextKey(data)
         while dataKey
             string csfName = JValue.SolveStr(data, "."+dataKey+".Name")
@@ -74,7 +72,7 @@ event onHighlightST()
     string[] stateNameFull = StringUtil.Split(GetState(), "___")
     if stateNameFull.Length > 1
         string csfName = stateNameFull[1]
-        int data = JValue.ReadFromFile(dataPath)
+        int data = JValue.ReadFromFile(DenjiAPI.GetDataFilePath())
         SetInfoText("ESP Name: " \
             + JValue.SolveStr(data, "."+csfName+".plugin") \
             + "\n" + "Icon path: " \
